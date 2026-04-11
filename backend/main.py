@@ -1,0 +1,199 @@
+"""
+AFL Fantasy Dashboard — Backend API
+────────────────────────────────────
+Run:  uvicorn main:app --reload --port 8000
+Docs: http://localhost:8000/docs
+"""
+
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+import httpx
+from typing import Optional
+from datetime import datetime
+
+import cache
+
+# ── App setup ────────────────────────────────────────────────────────────────
+
+app = FastAPI(
+    title="AFL Fantasy Dashboard API",
+    description="Live and historical AFL Fantasy player data.",
+    version="0.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ── Constants ─────────────────────────────────────────────────────────────────
+
+AFL_PLAYERS_URL = "https://fantasy.afl.com.au/json/fantasy/players.json"
+CACHE_KEY_PLAYERS = "players:live"
+CACHE_TTL = 180  # seconds (3 minutes)
+
+SQUAD_NAMES: dict[int, str] = {
+    10: "Adelaide Crows",    
+    20: "Brisbane Lions",     
+    30: "Carlton",
+    40: "Collingwood", 
+    50: "Essendon",  
+    60: "Fremantle",
+    70: "Geelong Cats",
+    80: "Hawthorn",
+    90: "Melbourne",
+    100: "North Melbourne",
+    110: "Port Adelaide",
+    120: "Richmond",
+    130: "St Kilda",
+    140: "Western Bulldogs", 
+    150: "West Coast Eagles",
+    160: "Sydney Swans",
+    1000: "Gold Coast",
+    1010: "GWS Giants",
+}
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+async def fetch_players_raw() -> list[dict]:
+    """
+    Fetch player list from AFL Fantasy API, with in-memory caching.
+    Returns the raw list enriched with teamName.
+    """
+    cached = cache.get(CACHE_KEY_PLAYERS)
+    if cached is not None:
+        return cached
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            response = await client.get(AFL_PLAYERS_URL)
+            response.raise_for_status()
+            players = response.json()
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="AFL API timed out.")
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=502, detail=f"AFL API returned {e.response.status_code}.")
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=502, detail=f"Could not reach AFL API: {e}")
+
+    # Enrich with human-readable team name
+    for p in players:
+        p["teamName"] = SQUAD_NAMES.get(p.get("squadId", 0), "Unknown")
+
+    cache.set(CACHE_KEY_PLAYERS, players, ttl_seconds=CACHE_TTL)
+    return players
+
+
+def apply_filters(
+    players: list[dict],
+    position: Optional[str],
+    squad_id: Optional[int],
+    status: Optional[str],
+    sort_by: str,
+    limit: Optional[int],
+) -> list[dict]:
+    if position:
+        players = [p for p in players if position.upper() in p.get("position", [])]
+    if squad_id:
+        players = [p for p in players if p.get("squadId") == squad_id]
+    if status:
+        players = [p for p in players if p.get("status", "").lower() == status.lower()]
+
+    reverse = sort_by not in ("lastName", "firstName")
+    players = sorted(players, key=lambda p: p.get(sort_by) or 0, reverse=reverse)
+
+    if limit:
+        players = players[:limit]
+
+    return players
+
+
+# ── Live endpoints ────────────────────────────────────────────────────────────
+
+@app.get("/api/players", summary="List players (live, cached 3 min)")
+async def get_players(
+    position: Optional[str] = Query(None, description="DEF | MID | RUC | FWD"),
+    squad_id: Optional[int] = Query(None, description="Filter by team squad ID"),
+    status: Optional[str]   = Query(None, description="active | injured | uncertain"),
+    sort_by: str             = Query("averagePoints", description="Field to sort by"),
+    limit: Optional[int]    = Query(None, description="Max results to return"),
+):
+    players = await fetch_players_raw()
+    players = apply_filters(players, position, squad_id, status, sort_by, limit)
+    return {
+        "players": players,
+        "total": len(players),
+        "cached": cache.get(CACHE_KEY_PLAYERS) is not None,
+        "fetched_at": datetime.utcnow().isoformat(),
+    }
+
+
+@app.get("/api/players/{player_id}", summary="Get a single player by ID")
+async def get_player(player_id: int):
+    players = await fetch_players_raw()
+    player = next((p for p in players if p["id"] == player_id), None)
+    if not player:
+        raise HTTPException(status_code=404, detail=f"Player {player_id} not found.")
+    return player
+
+
+@app.get("/api/stats/summary", summary="Aggregate stats for dashboard overview")
+async def get_summary():
+    players = await fetch_players_raw()
+    active  = [p for p in players if (p.get("averagePoints") or 0) > 0]
+    injured = [p for p in players if p.get("status") == "injured"]
+
+    top_scorer = max(active, key=lambda p: p.get("averagePoints") or 0, default=None)
+    valued = [p for p in active if (p.get("price") or 0) > 0 and (p.get("pricePerPoint") or 0) > 0]
+    best_value = min(valued, key=lambda p: p.get("pricePerPoint") or float("inf"), default=None)
+
+    position_avgs: dict[str, float] = {}
+    for pos in ("DEF", "MID", "RUC", "FWD"):
+        pos_players = [p for p in active if pos in p.get("position", [])]
+        if pos_players:
+            position_avgs[pos] = round(
+                sum(p.get("averagePoints") or 0 for p in pos_players) / len(pos_players), 1
+            )
+
+    return {
+        "totalPlayers":    len(players),
+        "activePlayers":   len(active),
+        "injuredPlayers":  len(injured),
+        "topScorer": {
+            "id":   top_scorer["id"] if top_scorer else None,
+            "name": f"{top_scorer['firstName']} {top_scorer['lastName']}" if top_scorer else None,
+            "avg":  top_scorer.get("averagePoints") if top_scorer else None,
+        },
+        "bestValue": {
+            "id":           best_value["id"] if best_value else None,
+            "name":         f"{best_value['firstName']} {best_value['lastName']}" if best_value else None,
+            "pricePerPoint": best_value.get("pricePerPoint") if best_value else None,
+        },
+        "positionAverages": position_avgs,
+        "fetched_at": datetime.utcnow().isoformat(),
+    }
+
+
+@app.get("/api/teams", summary="List all AFL teams")
+async def get_teams():
+    teams = [{"id": k, "name": v} for k, v in sorted(SQUAD_NAMES.items(), key=lambda x: x[1])]
+    return {"teams": teams}
+
+# ── Debug / utility ───────────────────────────────────────────────────────────
+
+@app.delete("/api/cache", summary="Manually clear the player cache")
+async def clear_cache():
+    cache.invalidate(CACHE_KEY_PLAYERS)
+    return {"message": "Cache cleared."}
+
+
+@app.get("/api/cache/info", summary="Inspect current cache state")
+async def cache_info():
+    return cache.info()
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok", "time": datetime.utcnow().isoformat()}

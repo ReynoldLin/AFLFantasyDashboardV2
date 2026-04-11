@@ -167,7 +167,7 @@ td {
 /* Cell styles */
 .player-name { font-weight: 500; }
 .team-name   { color: var(--muted); font-size: 12px; }
-.avg-score   { font-family: 'Open Sans', sans-serif; font-size: 18px; font-weight: 700; color: var(--accent); }
+.avg-score   { font-family: 'Open Sans', sans-serif; font-size: 14px; font-weight: 700; color: var(--accent); }
 .muted-val   { color: var(--muted); }
 
 /* Position badge */
@@ -186,7 +186,7 @@ td {
 .pos-FWD { background: rgba(220,100,30,0.12); color: #b55010; border: 1px solid rgba(220,100,30,0.25); }
 
 /* Status */
-.status { font-size: 11px; font-family: 'Open Sans', sans-serif; letter-spacing: 0.5px; text-transform: capitalize; }
+.status { font-size: 12px; font-family: 'Open Sans', sans-serif; text-transform: capitalize; }
 .status-active    { color: var(--accent); }
 .status-injured   { color: var(--danger); }
 .status-uncertain { color: var(--warn); }

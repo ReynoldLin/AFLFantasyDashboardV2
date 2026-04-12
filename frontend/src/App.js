@@ -101,6 +101,10 @@ function isPlayerLive(player, rounds) {
   return playerGame.status !== 'completed'
 }
 
+function hasLiveGame(rounds) {
+  return Object.values(rounds).some(r => r.status === 'playing')
+}
+
 export default function App() {
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -136,19 +140,17 @@ export default function App() {
 
   useEffect(() => {
     if (!selectedPlayer) return
-
-    const load = () => {
+    const loadStats = () => {
       setGameStatsLoading(true)
       fetchPlayerGameStats(selectedPlayer.id)
         .then(setGameStats)
         .catch(() => setGameStats(null))
         .finally(() => setGameStatsLoading(false))
     }
-
-    load()
-    const interval = setInterval(load, 30000)
+    loadStats()
+    const interval = setInterval(loadStats, hasLiveGame(rounds) ? 5000 : 60000)
     return () => clearInterval(interval)
-  }, [selectedPlayer])
+  }, [selectedPlayer, rounds])
 
   useEffect(() => {
     if (!selectedPlayer) return
@@ -164,16 +166,30 @@ export default function App() {
       .catch(() => {})
   }, [])
 
-  useEffect(() => {
+   useEffect(() => {
+    if (!selectedPlayer) return
+    const load = () => {
+      setGameStatsLoading(true)
+      fetchPlayerGameStats(selectedPlayer.id)
+        .then(setGameStats)
+        .catch(() => setGameStats(null))
+        .finally(() => setGameStatsLoading(false))
+    }
     load()
     const interval = setInterval(load, 30000)
     return () => clearInterval(interval)
-  }, [load])
+  }, [selectedPlayer])
 
   const visible = players
   .filter(p => !search || `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase()))
   .filter(p => !liveOnly || isPlayerLive(p, rounds))
-  .sort((a, b) => liveOnly ? (b.liveScore ?? 0) - (a.liveScore ?? 0) : 0)
+  .sort((a, b) => {
+    if (liveOnly) return (b.liveScore ?? 0) - (a.liveScore ?? 0)
+    if (sortBy === 'lastName' || sortBy === 'firstName') {
+      return (a[sortBy] || '').localeCompare(b[sortBy] || '')
+    }
+    return (b[sortBy] ?? 0) - (a[sortBy] ?? 0)
+  })
 
   return (
     <div>
@@ -422,6 +438,9 @@ export default function App() {
             )}
 
             {activeTab === 'gameHistory' && (() => {
+              if (gameStatsLoading && !gameStats) return (
+                <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)' }}>Loading...</div>
+              )
               const year = 2026
               const squadId = selectedPlayer.squadId
 

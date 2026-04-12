@@ -6,6 +6,7 @@ __pycache__/
 .env
 
 # Data files
+data/
 data/*.csv
 data/*.db
 *.sqlite

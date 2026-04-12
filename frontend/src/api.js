@@ -23,3 +23,9 @@ export async function fetchRounds() {
   if (!res.ok) throw new Error('Failed to fetch rounds')
   return res.json()
 }
+
+export async function fetchPlayerHistory(playerId) {
+  const res = await fetch(`${BASE}/players/${playerId}/history`)
+  if (!res.ok) throw new Error('Failed to fetch player history')
+  return res.json()
+}

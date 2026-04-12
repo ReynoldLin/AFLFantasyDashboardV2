@@ -10,6 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import httpx
 from typing import Optional
 from datetime import datetime
+import json
+from pathlib import Path
 
 import cache
 
@@ -34,6 +36,8 @@ AFL_PLAYERS_URL = "https://fantasy.afl.com.au/json/fantasy/players.json"
 AFL_ROUNDS_URL = "https://fantasy.afl.com.au/json/fantasy/rounds.json"
 CACHE_KEY_PLAYERS = "players:live"
 CACHE_KEY_ROUNDS = "rounds:live"
+HISTORY_PATH = Path("data/player_history.json")
+_history_cache = None
 CACHE_TTL = 180  # seconds (3 minutes)
 
 SQUAD_NAMES: dict[int, str] = {
@@ -111,6 +115,14 @@ def apply_filters(
 
     return players
 
+def load_history():
+    global _history_cache
+    if _history_cache is None:
+        if not HISTORY_PATH.exists():
+            raise HTTPException(status_code=404, detail="Historical data not found. Run seed_history.py first.")
+        with open(HISTORY_PATH) as f:
+            _history_cache = json.load(f)
+    return _history_cache
 
 # ── Live endpoints ────────────────────────────────────────────────────────────
 
@@ -244,6 +256,14 @@ async def get_rounds():
 
     cache.set(CACHE_KEY_ROUNDS, result, ttl_seconds=CACHE_TTL)
     return result
+
+@app.get("/api/players/{player_id}/history", summary="Get career history for a player")
+async def get_player_history(player_id: int):
+    history = load_history()
+    data = history.get(str(player_id))
+    if not data:
+        raise HTTPException(status_code=404, detail=f"No history found for player {player_id}.")
+    return data
 
 # ── Debug / utility ───────────────────────────────────────────────────────────
 

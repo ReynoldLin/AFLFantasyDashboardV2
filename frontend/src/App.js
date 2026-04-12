@@ -11,12 +11,43 @@ const SORT_OPTIONS = [
   { label: 'Best Value', value: 'pricePerPoint' },
 ]
 
-function PosBadge({ pos }) {
-  return <span className={`pos-badge pos-${pos}`}>{pos}</span>
+const POS_COLOURS = {
+  DEF: '#F38182',
+  MID: '#EBF19F',
+  RUC: '#A8A8FB',
+  FWD: '#ABF5CA',
+}
+
+const STATUS_LABELS = {
+  'playing': 'Selected',
+  'injured': 'Injured',
+  'not-playing': 'Not Selected',
+  'emergency': 'Emergency',
+}
+
+function getStatus(status) {
+  return STATUS_LABELS[status] || status
+}
+
+function PosBadge({ positions }) {
+  if (positions.length === 1) {
+    return (
+      <span className="pos-badge" style={{ background: POS_COLOURS[positions[0]] }}>
+        {positions[0]}
+      </span>
+    )
+  }
+  const c1 = POS_COLOURS[positions[0]]
+  const c2 = POS_COLOURS[positions[1]]
+  return (
+    <span className="pos-badge" style={{ background: `linear-gradient(120deg, ${c1} 50%, ${c2} 50%)` }}>
+      {positions.join('/')}
+    </span>
+  )
 }
 
 function StatusLabel({ status }) {
-  return <span className={`status status-${status}`}>{status}</span>
+  return <span className={`status status-${status}`}>{getStatus(status)}</span>
 }
 
 function SkeletonRows() {
@@ -57,8 +88,7 @@ export default function App() {
 
   const visible = search
     ? players.filter(p =>
-        `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
-        (p.teamName || '').toLowerCase().includes(search.toLowerCase())
+        `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase())
       )
     : players
 
@@ -94,7 +124,7 @@ export default function App() {
           <input
             className="search-input"
             type="text"
-            placeholder="Search player or team..."
+            placeholder="Search player..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -109,9 +139,8 @@ export default function App() {
             <table>
               <thead>
                 <tr>
-                  <th>Player</th>
-                  <th>Team</th>
-                  <th>Pos</th>
+                  <th style={{ width: "20%" }}>Player</th>
+                  <th style={{ textAlign: "center"}}>Team</th>
                   <th>Price</th>
                   <th>Avg</th>
                   <th>Last 3</th>
@@ -139,17 +168,23 @@ export default function App() {
                             style={{ width: 72, height: 72, objectFit: 'contain' }}
                             onError={e => { e.target.style.visibility = 'hidden' }}
                           />
-                          <span className="player-name">{p.firstName} {p.lastName}</span>
+                          <div>
+                            <div className="player-name">{p.firstName} {p.lastName}</div>
+                            <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                              <PosBadge positions={p.position} />
+                            </div>
+                          </div>
                         </div>
                       </td>
-                      <td className="team-name">{p.teamName}</td>
-                      <td>
-                        <div className="pos-badges">
-                          {p.position.map(pos => <PosBadge key={pos} pos={pos} />)}
-                        </div>
+                      <td style={{ textAlign: "center"}}>
+                        <img
+                          src={`/logos/${p.squadId}.svg`}
+                          alt={p.teamName}
+                          style={{ width: 42, height: 42, objectFit: 'contain' }}
+                        />
                       </td>
                       <td>${(p.price.toLocaleString())}</td>
-                      <td className="avg-score">{p.averagePoints?.toFixed(1) || '—'}</td>
+                      <td className="muted-val">{p.averagePoints?.toFixed(1) || '—'}</td>
                       <td className="muted-val">{p.last3Avg || '—'}</td>
                       <td className="muted-val">{p.highScore || '—'}</td>
                       <td><StatusLabel status={p.status} /></td>

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 :root {
   --bg:       #f0f2f5;
   --surface:  #ffffff;
@@ -15,7 +17,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -36,7 +38,7 @@ body {
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 .header h1 {
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 26px;
   font-weight: 800;
   letter-spacing: 1px;
@@ -75,7 +77,7 @@ main {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-weight: 700;
   font-size: 13px;
   letter-spacing: 0.5px;
@@ -95,7 +97,7 @@ main {
   padding: 5px 10px;
   font-size: 13px;
   cursor: pointer;
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .search-input {
@@ -108,7 +110,7 @@ main {
   font-size: 13px;
   width: 220px;
   outline: none;
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 .search-input::placeholder { color: var(--muted); }
 .search-input:focus { border-color: var(--accent); }
@@ -142,7 +144,7 @@ th {
   padding: 10px 14px;
   text-align: left;
   color: var(--muted);
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 1px;
@@ -165,9 +167,8 @@ td {
 }
 
 /* Cell styles */
-.player-name { font-weight: 500; }
+.player-name { font-size: 14px; font-weight: 500; }
 .team-name   { color: var(--muted); font-size: 12px; }
-.avg-score   { font-family: 'Open Sans', sans-serif; font-size: 14px; font-weight: 700; color: var(--accent); }
 .muted-val   { color: var(--muted); }
 
 /* Position badge */
@@ -176,20 +177,26 @@ td {
   border-radius: 4px;
   padding: 1px 7px;
   font-size: 11px;
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-weight: 700;
   letter-spacing: 1px;
+  color: #1a1a1a;
+  border: none;
 }
-.pos-DEF { background: rgba(68,136,255,0.12); color: #2255cc; border: 1px solid rgba(68,136,255,0.25); }
-.pos-MID { background: rgba(0,165,114,0.12);  color: #007a52; border: 1px solid rgba(0,165,114,0.25); }
-.pos-RUC { background: rgba(140,80,220,0.12); color: #6b35bb; border: 1px solid rgba(140,80,220,0.25); }
-.pos-FWD { background: rgba(220,100,30,0.12); color: #b55010; border: 1px solid rgba(220,100,30,0.25); }
 
 /* Status */
-.status { font-size: 12px; font-family: 'Open Sans', sans-serif; text-transform: capitalize; }
-.status-active    { color: var(--accent); }
-.status-injured   { color: var(--danger); }
-.status-uncertain { color: var(--warn); }
+.status { 
+  font-size: 11px;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 1px;
+  text-transform: capitalize; 
+  border-radius: 4px;
+  padding: 5px 7px;
+}
+.status-playing    { background: #108329; color: #ffffff; }
+.status-injured   { background: #232D42; color: #ffffff; }
+.status-not-playing { background: #E41C1C; color: #ffffff; }
+.status-emergency { background: #B55DAE; color: #ffffff; }
 
 /* Skeleton */
 .skeleton {

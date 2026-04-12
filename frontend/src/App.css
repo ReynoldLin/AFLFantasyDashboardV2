@@ -184,6 +184,7 @@ td {
 /* Cell styles */
 .player-name { font-size: 14px; font-weight: 500; }
 .team-name   { color: var(--muted); font-size: 12px; }
+.text-val    { color: var(--text)}
 .muted-val   { color: var(--muted); }
 
 @keyframes pulse-dot {

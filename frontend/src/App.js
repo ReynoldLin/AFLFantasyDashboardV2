@@ -192,10 +192,20 @@ export default function App() {
   .filter(p => !liveOnly || isPlayerLive(p, rounds))
   .filter(p => teamFilter === 'All' || p.teamName === teamFilter)
   .sort((a, b) => {
-    if (liveOnly) return (b.liveScore ?? 0) - (a.liveScore ?? 0)
+    if (liveOnly && sortBy.key === 'liveScore') {
+      const aScore = a.liveScore ?? -1
+      const bScore = b.liveScore ?? -1
+      const mul = sortBy.dir === 'desc' ? -1 : 1
+      return mul * (bScore - aScore)
+    }
     const { key, dir } = sortBy
     const mul = dir === 'desc' ? -1 : 1
     if (key === 'lastName') return mul * (a.lastName || '').localeCompare(b.lastName || '')
+    if (key === 'ownership') {
+      const aOwn = Object.values(a.ownership || {}).pop() ?? 0
+      const bOwn = Object.values(b.ownership || {}).pop() ?? 0
+      return mul * (aOwn - bOwn)
+    }
     return mul * ((a[key] ?? 0) - (b[key] ?? 0))
   })
 
@@ -314,8 +324,23 @@ export default function App() {
                   <th style={{ cursor: 'pointer' }} onClick={() => handleSort('last3Avg')}>
                     Last 3 <SortIcon colKey="last3Avg" sortBy={sortBy} />
                   </th>
+                  <th style={{ cursor: 'pointer' }} onClick={() => handleSort('last5Avg')}>
+                    Last 5 <SortIcon colKey="last5Avg" sortBy={sortBy} />
+                  </th>
+                  <th style={{ cursor: 'pointer' }} onClick={() => handleSort('lowScore')}>
+                    Low <SortIcon colKey="lowScore" sortBy={sortBy} />
+                  </th>
                   <th style={{ cursor: 'pointer' }} onClick={() => handleSort('highScore')}>
                     High <SortIcon colKey="highScore" sortBy={sortBy} />
+                  </th>
+                  <th style={{ cursor: 'pointer' }} onClick={() => handleSort('roundPriceChange')}>
+                    R$C <SortIcon colKey="roundPriceChange" sortBy={sortBy} />
+                  </th>
+                  <th style={{ cursor: 'pointer' }} onClick={() => handleSort('seasonPriceChange')}>
+                    S$C <SortIcon colKey="seasonPriceChange" sortBy={sortBy} />
+                  </th>
+                  <th style={{ cursor: 'pointer' }} onClick={() => handleSort('ownership')}>
+                    Own% <SortIcon colKey="ownership" sortBy={sortBy} />
                   </th>
                   <th>Status</th>
                 </tr>
@@ -390,7 +415,21 @@ export default function App() {
                       </td>
                       <td className="muted-val">{p.averagePoints?.toFixed(1) || '—'}</td>
                       <td className="muted-val">{p.last3Avg || '—'}</td>
+                      <td className="muted-val">{p.last5Avg || '—'}</td>
+                      <td className="muted-val">{p.lowScore || '—'}</td>
                       <td className="muted-val">{p.highScore || '—'}</td>
+                      <td style={{ color: p.roundPriceChange > 0 ? '#007a52' : p.roundPriceChange < 0 ? '#d63050' : 'var(--muted)' }}>
+                        {p.roundPriceChange ? `$${p.roundPriceChange.toLocaleString()}` : '—'}
+                      </td>
+                      <td style={{ color: p.seasonPriceChange > 0 ? '#007a52' : p.seasonPriceChange < 0 ? '#d63050' : 'var(--muted)' }}>
+                        {p.seasonPriceChange ? `$${p.seasonPriceChange.toLocaleString()}` : '—'}
+                      </td>
+                      <td className="text-val">
+                        {(() => {
+                          const vals = Object.values(p.ownership || {})
+                          return vals.length > 0 ? `${vals[vals.length - 1]}%` : '—'
+                        })()}
+                      </td>
                       <td><StatusLabel status={p.status} /></td>
                     </tr>
                   ))

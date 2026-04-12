@@ -18,3 +18,13 @@ cd frontend
 npm install
 npm start
 ```
+
+### Historical Data
+Player career history (2014–2025) is stored locally and needs to be generated once before the app can show it.
+
+```bash
+cd backend
+python seed_history.py
+```
+
+This will fetch game-by-game stats for all ~791 players and save them to `backend/data/player_history.json`. It takes approximately 15–20 minutes to run.

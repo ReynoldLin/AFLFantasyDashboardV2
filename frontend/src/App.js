@@ -105,6 +105,23 @@ function SortIcon({ colKey, sortBy }) {
   return <span style={{ color: 'var(--accent)', marginLeft: 4 }}>{sortBy.dir === 'desc' ? '↓' : '↑'}</span>
 }
 
+function priceChangeColour(val) {
+  if (val > 0) return '#007a52'
+  if (val < 0) return '#d63050'
+  return 'var(--text)'
+}
+
+function calcBreakeven(player) {
+  if (!player.price || !player.averagePoints) return null
+  const priceHistory = Object.values(player.prices || {})
+  const prevPrice = priceHistory.length > 1
+    ? priceHistory[priceHistory.length - 2]
+    : player.price
+  return Math.round(
+    (3 * player.price - prevPrice * 15) / (player.price / player.averagePoints)
+  )
+}
+
 export default function App() {
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -122,6 +139,7 @@ export default function App() {
   const [playerHistory, setPlayerHistory] = useState(null)
   const [expandedYear, setExpandedYear] = useState(null)
   const [teamFilter, setTeamFilter] = useState('All')
+  const [prevSortBy, setPrevSortBy] = useState({ key: 'averagePoints', dir: 'desc' })
 
   const load = useCallback(async () => {
   setLoading(true)
@@ -150,7 +168,7 @@ export default function App() {
         .finally(() => setGameStatsLoading(false))
     }
     load()
-    const interval = setInterval(load, 30000)
+    const interval = setInterval(load, 60000)
     return () => clearInterval(interval)
   }, [selectedPlayer])
 
@@ -170,7 +188,7 @@ export default function App() {
 
    useEffect(() => {
     load()
-    const interval = setInterval(load, 30000)
+    const interval = setInterval(load, 60000)
     return () => clearInterval(interval)
   }, [load])
 
@@ -214,9 +232,18 @@ export default function App() {
 
           <button
             className={`pos-live-btn ${liveOnly ? 'active' : ''}`}
-            onClick={() => setLiveOnly(l => !l)}
+            onClick={() => {
+              const newLiveOnly = !liveOnly
+              setLiveOnly(newLiveOnly)
+              if (newLiveOnly) {
+                setPrevSortBy(sortBy)
+                setSortBy({ key: 'liveScore', dir: 'desc' })
+              } else {
+                setSortBy(prevSortBy)
+              }
+            }}
           >
-            Live
+          Live
           </button>
 
           <select
@@ -234,13 +261,36 @@ export default function App() {
             }
           </select>
 
-          <input
-            className="search-input"
-            type="text"
-            placeholder="Search player..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+          <div style={{ position: 'relative', marginLeft: 'auto' }}>
+            <input
+              className="search-input"
+              type="text"
+              placeholder="Search player..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ paddingRight: search ? 28 : 12 }}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                style={{
+                  position: 'absolute',
+                  right: 8,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  color: 'var(--muted)',
+                  fontSize: 14,
+                  padding: 0,
+                  lineHeight: 1,
+                }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
 
           <span className="player-count">{visible.length} players</span>
         </div>
@@ -414,15 +464,29 @@ export default function App() {
               {[
                 { label: 'Games',     value: selectedPlayer.gamesPlayed },
                 { label: 'Price',     value: `$${selectedPlayer.price.toLocaleString()}` },
+                { label: 'Round Price Change',      
+                  value: `$${selectedPlayer.roundPriceChange.toLocaleString()}`, 
+                  color: priceChangeColour(selectedPlayer.roundPriceChange)},
+                { label: 'Season Price Change',      
+                  value: `$${selectedPlayer.seasonPriceChange.toLocaleString()}`, 
+                  color: priceChangeColour(selectedPlayer.seasonPriceChange)},
+                { label: 'Ownership', value: (() => {
+                  const vals = Object.values(selectedPlayer.ownership || {})
+                  return vals.length > 0 ? `${vals[vals.length - 1]}%` : '—'
+                })() },
+                { label: null, value: null },
                 { label: 'Avg',       value: selectedPlayer.averagePoints?.toFixed(1) },
                 { label: 'Last 3',    value: selectedPlayer.last3Avg },
-                { label: 'High',      value: selectedPlayer.highScore }
-              ].map(s => (
-                <div key={s.label} style={{
-                  background: '#f5f7fa', borderRadius: 8, padding: '10px 16px', textAlign: 'center', minWidth: 80
-                }}>
+                { label: 'Last 5',    value: selectedPlayer.last5Avg },
+                { label: 'Low',      value: selectedPlayer.lowScore },
+                { label: 'High',      value: selectedPlayer.highScore },
+                { label: 'Breakeven', value: calcBreakeven(selectedPlayer) ?? '—' },
+              ].map((s, i) => s.label === null ? (
+                <div key={i} style={{ width: '100%' }} />
+              ) : (
+                <div key={s.label} style={{ background: '#f5f7fa', borderRadius: 8, padding: '10px 16px', textAlign: 'center', minWidth: 80 }}>
                   <div style={{ fontSize: 11, color: '#7a8499', marginBottom: 2 }}>{s.label}</div>
-                  <div style={{ fontSize: 18, fontWeight: 700 }}>{s.value ?? '—'}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: s.color || 'inherit' }}>{s.value ?? '—'}</div>
                 </div>
               ))}
             </div>
@@ -495,7 +559,7 @@ export default function App() {
               const cellStyle = { padding: '9px 10px', textAlign: 'center' }
               const headers = ['Year', 'GM', 'Avg', 'D', 'K', 'H', 'M', 'T', 'FF', 'FA', 'HO', 'G', 'B', '']
               const historicalYears = playerHistory ? [...playerHistory].reverse() : []
-
+              
               return (
                 <div style={{ marginLeft: 6, marginRight: 6 }}>
 
@@ -514,7 +578,7 @@ export default function App() {
                         <td style={{ padding: '10px 12px', fontWeight: 700 }}>{year}</td>
                         <td style={{ padding: '10px 12px' }}>{playedGames.length}</td>
                         <td style={{ padding: '10px 12px', fontWeight: 700 }}>
-                          <span style={{ ...scoreColour(parseFloat(scoreAvg)), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
+                          <span style={{ ...scoreColour(parseFloat(scoreAvg).toFixed(1)), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
                             {scoreAvg}
                           </span>
                         </td>
@@ -619,7 +683,7 @@ export default function App() {
                             <td style={{ padding: '10px 12px' }}>{season.games_played}</td>
                             <td style={{ padding: '10px 12px', fontWeight: 700 }}>
                               <span style={{ ...scoreColour(season.avg), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
-                                {season.avg}
+                                {season.avg?.toFixed(1)}
                               </span>
                             </td>
                             <td style={{ padding: '10px 12px' }}>{season.disposals?.toFixed(1)}</td>
@@ -636,7 +700,7 @@ export default function App() {
                               {expandedYear === season.year ? '▲' : '▼'}
                             </td>
                           </tr>
-
+                          
                           {expandedYear === season.year && (
                             <>
                               <tr style={{ background: 'var(--surface2)', borderBottom: '1px solid var(--border)' }}>

@@ -5,9 +5,7 @@
   --surface:  #ffffff;
   --surface2: #f5f7fa;
   --border:   #e0e4ed;
-  --accent:   #00a572;
-  --accent2:  #0077cc;
-  --warn:     #e08800;
+  --accent:   #0f96da;
   --danger:   #d63050;
   --text:     #1a1e2e;
   --muted:    #7a8499;
@@ -188,7 +186,7 @@ td {
 .status { 
   font-size: 11px;
   font-family: 'Inter', sans-serif;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   text-transform: capitalize; 
   border-radius: 4px;
   padding: 5px 7px;

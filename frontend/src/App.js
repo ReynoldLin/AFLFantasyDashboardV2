@@ -61,12 +61,15 @@ function SkeletonRows() {
 }
 
 export default function App() {
-  const [players, setPlayers]   = useState([])
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState(null)
+  const [players, setPlayers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [position, setPosition] = useState('All')
-  const [sortBy, setSortBy]     = useState('averagePoints')
-  const [search, setSearch]     = useState('')
+  const [sortBy, setSortBy] = useState('averagePoints')
+  const [search, setSearch] = useState('')
+  const [selectedPlayer, setSelectedPlayer] = useState(null)
+  const [activeTab, setActiveTab] = useState('gameHistory')
+  const [expanded, setExpanded] = useState(true)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -95,8 +98,7 @@ export default function App() {
   return (
     <div>
       <header className="header">
-        <h1>AFL FANTASY</h1>
-        <span>Dashboard</span>
+        <h1>AFL FANTASY DASHBOARD</h1>
       </header>
 
       <main>
@@ -165,11 +167,18 @@ export default function App() {
                           <img
                             src={`https://fantasy.afl.com.au/media/fantasy/players/${p.id}_100.webp?v=3`}
                             alt={`${p.firstName} ${p.lastName}`}
-                            style={{ width: 72, height: 72, objectFit: 'contain' }}
+                            style={{ width: 72, height: 72, objectFit: 'contain', cursor: 'pointer' }}
                             onError={e => { e.target.style.visibility = 'hidden' }}
+                            onClick={() => setSelectedPlayer(p)}
                           />
                           <div>
-                            <div className="player-name">{p.firstName} {p.lastName}</div>
+                            <div 
+                              className="player-name"
+                              style = {{ cursor: 'pointer'}}
+                              onClick={() => { setSelectedPlayer(p); setActiveTab('gameHistory'); setExpanded(true); }}
+                              >
+                              {p.firstName} {p.lastName}
+                            </div>
                             <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
                               <PosBadge positions={p.position} />
                             </div>
@@ -196,6 +205,167 @@ export default function App() {
           )}
         </div>
       </main>
+
+    {/* Modal */}
+
+    {selectedPlayer && (
+        <div
+          onClick={() => setSelectedPlayer(null)}
+          style={{
+            position: 'fixed', top: 0, left: 0,
+            width: '100%', height: '100%',
+            background: 'rgba(0,0,0,0.4)',
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'white', borderRadius: 12, padding: 24,
+              width: '90%', maxWidth: 700,
+              maxHeight: '85vh', overflowY: 'auto',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+            }}
+          >
+            <button
+              onClick={() => setSelectedPlayer(null)}
+              style={{ float: 'right', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 18, color: '#888' }}
+            >
+              ✕
+            </button>
+            
+            {/* Header */}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+              <img
+                src={`https://fantasy.afl.com.au/media/fantasy/players/${selectedPlayer.id}_100.webp?v=3`}
+                alt={selectedPlayer.firstName}
+                style={{ width: 108, height: 108, objectFit: 'contain' }}
+                onError={e => { e.target.style.visibility = 'hidden' }}
+              />
+              <div>
+                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }}>
+                  {selectedPlayer.firstName} {selectedPlayer.lastName}
+                </h2>
+                <PosBadge positions={selectedPlayer.position} />
+              </div>
+              <img
+                src={`/logos/${selectedPlayer.squadId}.svg`}
+                alt=""
+                style={{ width: 64, height: 64, objectFit: 'contain', marginLeft: 'auto', marginRight: 16}}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {[
+                { label: 'Games',     value: selectedPlayer.gamesPlayed },
+                { label: 'Price',     value: `$${selectedPlayer.price.toLocaleString()}` },
+                { label: 'Avg',       value: selectedPlayer.averagePoints?.toFixed(1) },
+                { label: 'Last 3',    value: selectedPlayer.last3Avg },
+                { label: 'High',      value: selectedPlayer.highScore }
+              ].map(s => (
+                <div key={s.label} style={{
+                  background: '#f5f7fa', borderRadius: 8, padding: '10px 16px', textAlign: 'center', minWidth: 80
+                }}>
+                  <div style={{ fontSize: 11, color: '#7a8499', marginBottom: 2 }}>{s.label}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700 }}>{s.value ?? '—'}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #e0e4ed', marginTop: 10, marginBottom: 20 }}>
+              {['charts', 'gameHistory'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    padding: '8px 16px',
+                    border: 'none',
+                    borderBottom: activeTab === tab ? '2px solid var(--accent)' : '2px solid transparent',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    fontSize: 13,
+                    fontWeight: activeTab === tab ? 600 : 400,
+                    color: activeTab === tab ? 'var(--accent)' : '#7a8499',
+                    fontFamily: 'Inter, sans-serif',
+                  }}
+                >
+                  {tab === 'charts' ? 'Charts' : 'Game History'}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab content */}
+            {activeTab === 'charts' && (
+              <div style={{ color: '#7a8499', fontSize: 13  }}>
+                Charts coming soon.
+              </div>
+            )}
+
+            {activeTab === 'gameHistory' && (() => {
+              const scores = Object.entries(selectedPlayer.scores).sort((a, b) => Number(a[0]) - Number(b[0]))
+              const avg = scores.length > 0
+                ? (scores.reduce((sum, [, s]) => sum + s, 0) / scores.length).toFixed(1)
+                : '—'
+
+              return (
+                <div>
+                  {/* Year header row */}
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, border: '1px solid var(--border)', borderRadius: expanded ? '8px 8px 0 0' : 8, overflow: 'hidden' }}>
+                      <thead>
+                        <tr style={{ background: 'var(--surface2)', borderBottom: expanded ? '1px solid var(--border)' : 'none' }}>
+                          <th style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}>Year</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}>Games</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}>Average</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'right' }}></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          onClick={() => setExpanded(e => !e)}
+                          style={{ cursor: 'pointer', background: 'white' }}
+                        >
+                          <td style={{ padding: '10px 12px', fontWeight: 700 }}>{2026}</td>
+                          <td style={{ padding: '10px 12px' }}>{scores.length}</td>
+                          <td style={{ padding: '10px 12px' }}>{avg}</td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--muted)', fontSize: 12 }}>{expanded ? '▲' : '▼'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                  {/* Collapsible table */}
+                  {expanded && (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, border: '1px solid var(--border)', borderTop: 'none', borderBottomLeftRadius: 8, borderBottomRightRadius: 8, overflow: 'hidden' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
+                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}>Round</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}>Score</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {scores.length === 0 ? (
+                          <tr>
+                            <td colSpan={2} style={{ padding: 16, color: 'var(--muted)', textAlign: 'center' }}>No games played</td>
+                          </tr>
+                        ) : (
+                          scores.map(([round, score]) => (
+                            <tr key={round} style={{ borderBottom: '1px solid var(--border)' }}>
+                              <td style={{ padding: '10px 12px' }}>{round-1}</td>
+                              <td style={{ padding: '10px 12px', fontWeight: 600 }}>{score}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

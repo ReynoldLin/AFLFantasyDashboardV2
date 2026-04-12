@@ -196,7 +196,7 @@ export default function App() {
       const aScore = a.liveScore ?? -1
       const bScore = b.liveScore ?? -1
       const mul = sortBy.dir === 'desc' ? -1 : 1
-      return mul * (bScore - aScore)
+      return mul * (aScore - bScore)
     }
     const { key, dir } = sortBy
     const mul = dir === 'desc' ? -1 : 1

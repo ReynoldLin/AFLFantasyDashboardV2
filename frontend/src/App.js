@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchPlayers } from './api'
+import { fetchPlayers, fetchPlayerGameStats, fetchRounds } from './api'
 import './App.css'
 
 const POSITIONS = ['All', 'DEF', 'MID', 'RUC', 'FWD']
@@ -23,6 +23,33 @@ const STATUS_LABELS = {
   'injured': 'Injured',
   'not-playing': 'Not Selected',
   'emergency': 'Emergency',
+}
+
+function calcFantasyScore(g) {
+  return (
+    g.kicks * 3 +
+    g.handballs * 2 +
+    g.marks * 3 +
+    g.tackles * 4 +
+    g.freesFor * 1 +
+    g.freesAgainst * -3 +
+    g.hitouts * 1 +
+    g.goals * 6 +
+    g.behinds * 1
+  )
+}
+
+function scoreColour(score) {
+  if (score >= 120) return { background: '#e8d5ff', color: 'var(--text)' }
+  if (score >= 100) return { background: '#C8E0A9', color: 'var(--text)' }
+  if (score >= 70)  return { background: '#FEE08D', color: 'var(--text)' }
+  return { background: '#ED999B', color: 'var(--text)' }
+}
+
+function togColour(tog) {
+  if (tog >= 80) return { background: '#C8E0A9', color: 'var(--text)' }
+  if (tog >= 70) return { background: '#FEE08D', color: 'var(--text)' }
+  return { background: '#ED999B', color: 'var(--text)' }
 }
 
 function getStatus(status) {
@@ -60,6 +87,23 @@ function SkeletonRows() {
   ))
 }
 
+function isLiveRound(rounds) {
+  return Object.values(rounds).some(r => r.status === 'playing')
+}
+
+function isPlayerLive(player, rounds) {
+  if (player.liveScore === null) return false
+  const playingRound = Object.values(rounds).find(r => r.status === 'playing')
+  if (!playingRound) return false
+
+  const playerGame = playingRound.games.find(g =>
+    g.homeId === player.squadId || g.awayId === player.squadId
+  )
+  if (!playerGame) return false
+
+  return playerGame.status !== 'completed'
+}
+
 export default function App() {
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -70,6 +114,10 @@ export default function App() {
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [activeTab, setActiveTab] = useState('gameHistory')
   const [expanded, setExpanded] = useState(true)
+  const [gameStats, setGameStats] = useState(null)
+  const [gameStatsLoading, setGameStatsLoading] = useState(false)
+  const [rounds, setRounds] = useState({})
+  const [liveOnly, setLiveOnly] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -87,13 +135,38 @@ export default function App() {
     }
   }, [position, sortBy])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    if (!selectedPlayer) return
 
-  const visible = search
-    ? players.filter(p =>
-        `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase())
-      )
-    : players
+    const load = () => {
+      setGameStatsLoading(true)
+      fetchPlayerGameStats(selectedPlayer.id)
+        .then(setGameStats)
+        .catch(() => setGameStats(null))
+        .finally(() => setGameStatsLoading(false))
+    }
+
+    load()
+    const interval = setInterval(load, 30000)
+    return () => clearInterval(interval)
+  }, [selectedPlayer])
+
+  useEffect(() => {
+    fetchRounds()
+      .then(setRounds)
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    load()
+    const interval = setInterval(load, 30000)
+    return () => clearInterval(interval)
+  }, [load])
+
+  const visible = players
+  .filter(p => !search || `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase()))
+  .filter(p => !liveOnly || isPlayerLive(p, rounds))
+  .sort((a, b) => liveOnly ? (b.liveScore ?? 0) - (a.liveScore ?? 0) : 0)
 
   return (
     <div>
@@ -112,6 +185,13 @@ export default function App() {
               {pos}
             </button>
           ))}
+
+          <button
+            className={`pos-live-btn ${liveOnly ? 'active' : ''}`}
+            onClick={() => setLiveOnly(l => !l)}
+          >
+            Live
+          </button>
 
           <select
             className="filter-select"
@@ -133,7 +213,7 @@ export default function App() {
 
           <span className="player-count">{visible.length} players</span>
         </div>
-
+        
         <div className="table-wrap">
           {error ? (
             <div className="error">Error: {error}</div>
@@ -144,6 +224,8 @@ export default function App() {
                   <th style={{ width: "20%" }}>Player</th>
                   <th style={{ textAlign: "center"}}>Team</th>
                   <th>Price</th>
+                  <th style={{ textAlign: "center"}}>Live</th>
+                  <th style={{ width: 10 }}></th>
                   <th>Avg</th>
                   <th>Last 3</th>
                   <th>High</th>
@@ -193,6 +275,31 @@ export default function App() {
                         />
                       </td>
                       <td>${(p.price.toLocaleString())}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        {p.liveScore !== null ? (
+                          <span style={{
+                            ...scoreColour(p.liveScore),
+                            borderRadius: 6,
+                            padding: '2px 8px',
+                            fontWeight: 700,
+                            fontSize: 13,
+                          }}>
+                            {p.liveScore}
+                          </span>
+                        ) : '—'}
+                      </td>
+                      <td style={{ textAlign: 'left', width: 20 }}>
+                        {isPlayerLive(p, rounds) && (
+                          <span style={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: '50%',
+                            background: '#ff4444',
+                            display: 'inline-block',
+                            animation: 'pulse-dot 1.2s ease-in-out infinite',
+                          }} />
+                        )}
+                      </td>
                       <td className="muted-val">{p.averagePoints?.toFixed(1) || '—'}</td>
                       <td className="muted-val">{p.last3Avg || '—'}</td>
                       <td className="muted-val">{p.highScore || '—'}</td>
@@ -223,7 +330,7 @@ export default function App() {
             onClick={e => e.stopPropagation()}
             style={{
               background: 'white', borderRadius: 12, padding: 24,
-              width: '90%', maxWidth: 700,
+              width: '90%', maxWidth: 800,
               maxHeight: '85vh', overflowY: 'auto',
               boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
             }}
@@ -241,13 +348,16 @@ export default function App() {
               <img
                 src={`https://fantasy.afl.com.au/media/fantasy/players/${selectedPlayer.id}_100.webp?v=3`}
                 alt={selectedPlayer.firstName}
-                style={{ width: 108, height: 108, objectFit: 'contain' }}
+                style={{ width: 124, height: 124, objectFit: 'contain' }}
                 onError={e => { e.target.style.visibility = 'hidden' }}
               />
               <div>
-                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }}>
+                <h2 style={{ fontSize: 24, fontWeight: 600, marginBottom: 4 }}>
                   {selectedPlayer.firstName} {selectedPlayer.lastName}
                 </h2>
+                <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 6 }}>
+                  {selectedPlayer.teamName}
+                </div>
                 <PosBadge positions={selectedPlayer.position} />
               </div>
               <img
@@ -305,58 +415,172 @@ export default function App() {
             )}
 
             {activeTab === 'gameHistory' && (() => {
-              const scores = Object.entries(selectedPlayer.scores).sort((a, b) => Number(a[0]) - Number(b[0]))
-              const avg = scores.length > 0
-                ? (scores.reduce((sum, [, s]) => sum + s, 0) / scores.length).toFixed(1)
+              const year = 2026
+              const squadId = selectedPlayer.squadId
+
+              const playedGames = gameStats || []
+              const playedRounds = new Set(playedGames.map(g => g.roundNumber))
+
+              const avg = playedGames.length > 0
+                ? (playedGames.reduce((sum, g) => sum + calcFantasyScore(g), 0) / playedGames.length).toFixed(1)
                 : '—'
 
-              return (
-                <div>
-                  {/* Year header row */}
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, border: '1px solid var(--border)', borderRadius: expanded ? '8px 8px 0 0' : 8, overflow: 'hidden' }}>
-                      <thead>
-                        <tr style={{ background: 'var(--surface2)', borderBottom: expanded ? '1px solid var(--border)' : 'none' }}>
-                          <th style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}>Year</th>
-                          <th style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}>Games</th>
-                          <th style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}>Average</th>
-                          <th style={{ padding: '10px 12px', textAlign: 'right' }}></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr
-                          onClick={() => setExpanded(e => !e)}
-                          style={{ cursor: 'pointer', background: 'white' }}
-                        >
-                          <td style={{ padding: '10px 12px', fontWeight: 700 }}>{2026}</td>
-                          <td style={{ padding: '10px 12px' }}>{scores.length}</td>
-                          <td style={{ padding: '10px 12px' }}>{avg}</td>
-                          <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--muted)', fontSize: 12 }}>{expanded ? '▲' : '▼'}</td>
-                        </tr>
-                      </tbody>
-                    </table>
+              const statAvg = (key) => {
+                if (!gameStats || gameStats.length === 0) return '—'
+                return (gameStats.reduce((sum, g) => sum + (g[key] || 0), 0) / gameStats.length).toFixed(1)
+              }
 
-                  {/* Collapsible table */}
+              const scoreAvg = avg
+
+              const allRounds = Object.values(rounds).sort((a, b) => a.roundNumber - b.roundNumber)
+
+              const rows = allRounds.map(r => {
+                const rn = r.roundNumber
+                const isBye = r.byeSquads.includes(squadId)
+                const game = playedGames.find(g => g.roundNumber === rn)
+                const opponentId = r.fixture[String(squadId)]
+                const squadPlayed = r.squadsPlayed.includes(squadId)
+
+                if (game) {
+                  return { type: 'played', rn, game, opponentId }
+                } else if (isBye) {
+                  return { type: 'bye', rn, opponentId: null }
+                } else if (r.status === 'scheduled') {
+                  return { type: 'upcoming', rn, opponentId }
+                } else if (r.status === 'completed' && squadPlayed) {
+                  return { type: 'dnp', rn, opponentId }
+                } else if (r.status === 'playing') {
+                  return { type: 'upcoming', rn, opponentId }
+                } else {
+                  return null
+                }
+              }).filter(Boolean)
+
+              const cellStyle = { padding: '9px 10px', textAlign: 'center' }
+
+              return (
+                <div style={{ marginLeft: 6, marginRight: 6 }}>
+                  {/* Year summary header table */}
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, border: '1px solid var(--border)', borderRadius: expanded ? '8px 8px 0 0' : 8, overflow: 'hidden' }}>
+                    <thead>
+                      <tr style={{ background: 'var(--surface2)', borderBottom: '1px solid var(--border)' }}>
+                        {['Year', 'GM', 'Avg', 'D', 'K', 'H', 'M', 'T', 'FF', 'FA', 'HO', 'G', 'B', ''].map(h => (
+                          <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr onClick={() => setExpanded(e => !e)} style={{ cursor: 'pointer', background: 'white' }}>
+                        <td style={{ padding: '10px 12px', fontWeight: 700 }}>{year}</td>
+                        <td style={{ padding: '10px 12px' }}>{playedGames.length}</td>
+                        <td style={{ padding: '10px 12px', fontWeight: 700 }}>
+                          <span style={{ ...scoreColour(parseFloat(scoreAvg)), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
+                            {scoreAvg}
+                          </span>
+                        </td>
+                        <td style={{ padding: '10px 12px' }}>{statAvg('disposals')}</td>
+                        <td style={{ padding: '10px 12px' }}>{statAvg('kicks')}</td>
+                        <td style={{ padding: '10px 12px' }}>{statAvg('handballs')}</td>
+                        <td style={{ padding: '10px 12px' }}>{statAvg('marks')}</td>
+                        <td style={{ padding: '10px 12px' }}>{statAvg('tackles')}</td>
+                        <td style={{ padding: '10px 12px' }}>{statAvg('freesFor')}</td>
+                        <td style={{ padding: '10px 12px' }}>{statAvg('freesAgainst')}</td>
+                        <td style={{ padding: '10px 12px' }}>{statAvg('hitouts')}</td>
+                        <td style={{ padding: '10px 12px' }}>{statAvg('goals')}</td>
+                        <td style={{ padding: '10px 12px' }}>{statAvg('behinds')}</td>
+                        <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--muted)', fontSize: 12 }}>{expanded ? '▲' : '▼'}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  {/* Expanded round-by-round table */}
                   {expanded && (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, border: '1px solid var(--border)', borderTop: 'none', borderBottomLeftRadius: 8, borderBottomRightRadius: 8, overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, border: '1px solid var(--border)', borderTop: '1px solid var(--border)'}}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
-                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}>Round</th>
-                          <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}>Score</th>
+                          {['Rd', 'Opp', 'Score', 'TOG%', 'D', 'K', 'HB', 'M', 'T', 'FF', 'FA', 'HO', 'G', 'B'].map(h => (
+                            <th key={h} style={{ ...cellStyle, color: 'var(--muted)', fontWeight: 600 }}>{h}</th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {scores.length === 0 ? (
-                          <tr>
-                            <td colSpan={2} style={{ padding: 16, color: 'var(--muted)', textAlign: 'center' }}>No games played</td>
-                          </tr>
-                        ) : (
-                          scores.map(([round, score]) => (
-                            <tr key={round} style={{ borderBottom: '1px solid var(--border)' }}>
-                              <td style={{ padding: '10px 12px' }}>{round-1}</td>
-                              <td style={{ padding: '10px 12px', fontWeight: 600 }}>{score}</td>
-                            </tr>
-                          ))
-                        )}
+                        {gameStatsLoading ? (
+                          <tr><td colSpan={13} style={{ padding: 16, textAlign: 'center', color: 'var(--muted)' }}>Loading...</td></tr>
+                        ) : rows.map(row => {
+                          if (row.type === 'played') {
+                            const g = row.game
+                            return (
+                              <tr key={row.rn} style={{ borderBottom: '1px solid var(--border)' }}>
+                                <td style={cellStyle}>{row.rn}</td>
+                                <td style={cellStyle}>
+                                  {row.opponentId && <img src={`/logos/${row.opponentId}.svg`} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} onError={e => e.target.style.visibility = 'hidden'} />}
+                                </td>
+                                <td style={{ ...cellStyle, fontWeight: 700 }}>
+                                  <span style={{ ...scoreColour(calcFantasyScore(g)), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
+                                    {calcFantasyScore(g)}
+                                  </span>
+                                </td>
+                                <td style={cellStyle}>
+                                  <span style={{ ...togColour(g.timeOnGround), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
+                                    {g.timeOnGround}%
+                                  </span>
+                                </td>
+                                <td style={cellStyle}>{g.disposals}</td>
+                                <td style={cellStyle}>{g.kicks}</td>
+                                <td style={cellStyle}>{g.handballs}</td>
+                                <td style={cellStyle}>{g.marks}</td>
+                                <td style={cellStyle}>{g.tackles}</td>
+                                <td style={cellStyle}>{g.freesFor}</td>
+                                <td style={cellStyle}>{g.freesAgainst}</td>
+                                <td style={cellStyle}>{g.hitouts}</td>
+                                <td style={cellStyle}>{g.goals}</td>
+                                <td style={cellStyle}>{g.behinds}</td>
+                              </tr>
+                            )
+                          }
+
+                          if (row.type === 'bye') {
+                            return (
+                              <tr key={row.rn} style={{ borderBottom: '1px solid var(--border)', opacity: 0.5, background: 'var(--surface2)' }}>
+                                <td style={cellStyle}>{row.rn}</td>
+                                <td style={cellStyle}>
+                                  <div style={{ width: 24, height: 24 }} />
+                                </td>
+                                <td colSpan={11} style={{ ...cellStyle, textAlign: 'center' }}>
+                                  <span style={{ fontSize: 11, background: '#9de7d6', color: '#022e24', borderRadius: 4, padding: '1px 8px' }}>BYE</span>
+                                </td>
+                              </tr>
+                            )
+                          }
+
+                          if (row.type === 'dnp') {
+                            return (
+                              <tr key={row.rn} style={{ borderBottom: '1px solid var(--border)', opacity: 0.5, background: 'var(--surface2)' }}>
+                                <td style={cellStyle}>{row.rn}</td>
+                                <td style={cellStyle}>
+                                  {row.opponentId && <img src={`/logos/${row.opponentId}.svg`} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} onError={e => e.target.style.visibility = 'hidden'} />}
+                                </td>
+                                <td colSpan={11} style={{ ...cellStyle, textAlign: 'center' }}>
+                                  <span style={{ fontSize: 11, background: '#fde8e8', color: 'var(--danger)', borderRadius: 4, padding: '1px 8px' }}>DNP</span>
+                                </td>
+                              </tr>
+                            )
+                          }
+
+                          if (row.type === 'upcoming') {
+                            return (
+                              <tr key={row.rn} style={{ borderBottom: '1px solid var(--border)', opacity: 0.4, background: 'var(--surface2)' }}>
+                                <td style={cellStyle}>{row.rn}</td>
+                                <td style={cellStyle}>
+                                  {row.opponentId && <img src={`/logos/${row.opponentId}.svg`} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} onError={e => e.target.style.visibility = 'hidden'} />}
+                                </td>
+                                <td colSpan={11} />
+                              </tr>
+                            )
+                          }
+
+                          return null
+                        })}
                       </tbody>
                     </table>
                   )}

@@ -87,6 +87,24 @@ main {
   color: var(--accent);
 }
 
+.pos-live-btn {
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid #108329;
+  background: transparent;
+  color: #108329;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+.pos-live-btn.active {
+  background: #108329;
+  color: #ffffff;
+}
+
 .filter-select {
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -168,6 +186,11 @@ td {
 .player-name { font-size: 14px; font-weight: 500; }
 .team-name   { color: var(--muted); font-size: 12px; }
 .muted-val   { color: var(--muted); }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
 
 /* Position badge */
 .pos-badges { display: flex; gap: 4px; flex-wrap: wrap; }

@@ -11,3 +11,15 @@ export async function fetchPlayers({ position, squadId, status, sortBy, limit } 
   if (!res.ok) throw new Error('Failed to fetch players')
   return res.json()
 }
+
+export async function fetchPlayerGameStats(playerId) {
+  const res = await fetch(`${BASE}/players/${playerId}/game_stats`)
+  if (!res.ok) throw new Error('Failed to fetch game stats')
+  return res.json()
+}
+
+export async function fetchRounds() {
+  const res = await fetch(`${BASE}/rounds`)
+  if (!res.ok) throw new Error('Failed to fetch rounds')
+  return res.json()
+}

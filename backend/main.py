@@ -31,7 +31,9 @@ app.add_middleware(
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 AFL_PLAYERS_URL = "https://fantasy.afl.com.au/json/fantasy/players.json"
+AFL_ROUNDS_URL = "https://fantasy.afl.com.au/json/fantasy/rounds.json"
 CACHE_KEY_PLAYERS = "players:live"
+CACHE_KEY_ROUNDS = "rounds:live"
 CACHE_TTL = 180  # seconds (3 minutes)
 
 SQUAD_NAMES: dict[int, str] = {
@@ -180,6 +182,68 @@ async def get_summary():
 async def get_teams():
     teams = [{"id": k, "name": v} for k, v in sorted(SQUAD_NAMES.items(), key=lambda x: x[1])]
     return {"teams": teams}
+
+@app.get("/api/players/{player_id}/game_stats", summary="Get 2026 game stats for a player")
+async def get_player_game_stats(player_id: int):
+    url = f"https://fantasy.afl.com.au/json/fantasy/players_game_stats/2026/{player_id}.json"
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            response = await client.get(url)
+            response.raise_for_status()
+            return response.json()
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="AFL API timed out.")
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=502, detail=f"AFL API returned {e.response.status_code}.")
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=502, detail=f"Could not reach AFL API: {e}")
+
+@app.get("/api/rounds", summary="Get all rounds with status, byes and fixtures")
+async def get_rounds():
+    cached = cache.get(CACHE_KEY_ROUNDS)
+    if cached is not None:
+        return cached
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            response = await client.get(AFL_ROUNDS_URL)
+            response.raise_for_status()
+            rounds = response.json()
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="AFL API timed out.")
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=502, detail=f"AFL API returned {e.response.status_code}.")
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=502, detail=f"Could not reach AFL API: {e}")
+
+    # Build a lookup keyed by roundNumber for easy frontend use
+    result = {}
+    for r in rounds:
+        rn = r["roundNumber"]
+        # Which squads played in this round
+        squads_played = set()
+        for game in r.get("games", []):
+            squads_played.add(game["homeId"])
+            squads_played.add(game["awayId"])
+
+        # Opponent lookup: squadId -> opponentId
+        fixture = {}
+        for game in r.get("games", []):
+            fixture[game["homeId"]] = game["awayId"]
+            fixture[game["awayId"]] = game["homeId"]
+
+        result[rn] = {
+            "roundNumber": rn,
+            "name": r["name"],
+            "status": r["status"],
+            "byeSquads": r.get("byeSquads", []),
+            "squadsPlayed": list(squads_played),
+            "fixture": fixture,
+            "games": r.get("games", [])
+        }
+
+    cache.set(CACHE_KEY_ROUNDS, result, ttl_seconds=CACHE_TTL)
+    return result
 
 # ── Debug / utility ───────────────────────────────────────────────────────────
 

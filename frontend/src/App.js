@@ -7,8 +7,7 @@ const SORT_OPTIONS = [
   { label: 'Avg Points',  value: 'averagePoints' },
   { label: 'Price',       value: 'price' },
   { label: 'Last 3 Avg', value: 'last3Avg' },
-  { label: 'High Score', value: 'highScore' },
-  { label: 'Best Value', value: 'pricePerPoint' },
+  { label: 'High Score', value: 'highScore' }
 ]
 
 const POS_COLOURS = {
@@ -101,8 +100,9 @@ function isPlayerLive(player, rounds) {
   return playerGame.status !== 'completed'
 }
 
-function hasLiveGame(rounds) {
-  return Object.values(rounds).some(r => r.status === 'playing')
+function SortIcon({ colKey, sortBy }) {
+  if (sortBy.key !== colKey) return <span style={{ color: 'var(--accent)', marginLeft: 4 }}>↕</span>
+  return <span style={{ color: 'var(--accent)', marginLeft: 4 }}>{sortBy.dir === 'desc' ? '↓' : '↑'}</span>
 }
 
 export default function App() {
@@ -110,7 +110,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [position, setPosition] = useState('All')
-  const [sortBy, setSortBy] = useState('averagePoints')
+  const [sortBy, setSortBy] = useState({ key: 'averagePoints', dir: 'desc' })
   const [search, setSearch] = useState('')
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [activeTab, setActiveTab] = useState('gameHistory')
@@ -121,36 +121,38 @@ export default function App() {
   const [liveOnly, setLiveOnly] = useState(false)
   const [playerHistory, setPlayerHistory] = useState(null)
   const [expandedYear, setExpandedYear] = useState(null)
+  const [teamFilter, setTeamFilter] = useState('All')
 
   const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await fetchPlayers({
-        position: position !== 'All' ? position : undefined,
-        sortBy,
-      })
-      setPlayers(data.players)
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setLoading(false)
-    }
-  }, [position, sortBy])
+  setLoading(true)
+  setError(null)
+  try {
+    const data = await fetchPlayers({
+      position: position !== 'All' ? position : undefined,
+    })
+    console.log('players loaded:', data)
+    setPlayers(data.players)
+  } catch (e) {
+    console.log('load error:', e)
+    setError(e.message)
+  } finally {
+    setLoading(false)
+  }
+}, [position, sortBy])
 
-  useEffect(() => {
+   useEffect(() => {
     if (!selectedPlayer) return
-    const loadStats = () => {
+    const load = () => {
       setGameStatsLoading(true)
       fetchPlayerGameStats(selectedPlayer.id)
         .then(setGameStats)
         .catch(() => setGameStats(null))
         .finally(() => setGameStatsLoading(false))
     }
-    loadStats()
-    const interval = setInterval(loadStats, hasLiveGame(rounds) ? 5000 : 60000)
+    load()
+    const interval = setInterval(load, 30000)
     return () => clearInterval(interval)
-  }, [selectedPlayer, rounds])
+  }, [selectedPlayer])
 
   useEffect(() => {
     if (!selectedPlayer) return
@@ -167,29 +169,30 @@ export default function App() {
   }, [])
 
    useEffect(() => {
-    if (!selectedPlayer) return
-    const load = () => {
-      setGameStatsLoading(true)
-      fetchPlayerGameStats(selectedPlayer.id)
-        .then(setGameStats)
-        .catch(() => setGameStats(null))
-        .finally(() => setGameStatsLoading(false))
-    }
     load()
     const interval = setInterval(load, 30000)
     return () => clearInterval(interval)
-  }, [selectedPlayer])
+  }, [load])
 
   const visible = players
   .filter(p => !search || `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase()))
   .filter(p => !liveOnly || isPlayerLive(p, rounds))
+  .filter(p => teamFilter === 'All' || p.teamName === teamFilter)
   .sort((a, b) => {
     if (liveOnly) return (b.liveScore ?? 0) - (a.liveScore ?? 0)
-    if (sortBy === 'lastName' || sortBy === 'firstName') {
-      return (a[sortBy] || '').localeCompare(b[sortBy] || '')
-    }
-    return (b[sortBy] ?? 0) - (a[sortBy] ?? 0)
+    const { key, dir } = sortBy
+    const mul = dir === 'desc' ? -1 : 1
+    if (key === 'lastName') return mul * (a.lastName || '').localeCompare(b.lastName || '')
+    return mul * ((a[key] ?? 0) - (b[key] ?? 0))
   })
+
+  function handleSort(key) {
+    setSortBy(prev =>
+      prev.key === key
+        ? { key, dir: prev.dir === 'desc' ? 'asc' : 'desc' }
+        : { key, dir: 'desc' }
+    )
+  }
 
   return (
     <div>
@@ -203,7 +206,7 @@ export default function App() {
             <button
               key={pos}
               className={`pos-btn ${position === pos ? 'active' : ''}`}
-              onClick={() => setPosition(pos)}
+              onClick={() => { setPosition(pos) }}
             >
               {pos}
             </button>
@@ -218,12 +221,17 @@ export default function App() {
 
           <select
             className="filter-select"
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
+            value={teamFilter}
+            onChange={e => setTeamFilter(e.target.value)}
           >
-            {SORT_OPTIONS.map(o => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
+            <option value="All">All Teams</option>
+            {[...new Set(players.map(p => p.teamName))]
+              .filter(Boolean)
+              .sort()
+              .map(team => (
+                <option key={team} value={team}>{team}</option>
+              ))
+            }
           </select>
 
           <input
@@ -244,14 +252,26 @@ export default function App() {
             <table>
               <thead>
                 <tr>
-                  <th style={{ width: "20%" }}>Player</th>
-                  <th style={{ textAlign: "center"}}>Team</th>
-                  <th>Price</th>
-                  <th style={{ textAlign: "center"}}>Live</th>
-                  <th style={{ width: 10 }}></th>
-                  <th>Avg</th>
-                  <th>Last 3</th>
-                  <th>High</th>
+                  <th style={{ width: '20%', cursor: 'pointer' }} onClick={() => handleSort('lastName')}>
+                    Player <SortIcon colKey="lastName" sortBy={sortBy} />
+                  </th>
+                  <th style={{ textAlign: 'center' }}>Team</th>
+                  <th style={{ cursor: 'pointer' }} onClick={() => handleSort('price')}>
+                    Price <SortIcon colKey="price" sortBy={sortBy} />
+                  </th>
+                  <th style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => handleSort('liveScore')}>
+                    Live <SortIcon colKey="liveScore" sortBy={sortBy} />
+                  </th>
+                  <th style={{ width: 20 }}></th>
+                  <th style={{ cursor: 'pointer' }} onClick={() => handleSort('averagePoints')}>
+                    Avg <SortIcon colKey="averagePoints" sortBy={sortBy} />
+                  </th>
+                  <th style={{ cursor: 'pointer' }} onClick={() => handleSort('last3Avg')}>
+                    Last 3 <SortIcon colKey="last3Avg" sortBy={sortBy} />
+                  </th>
+                  <th style={{ cursor: 'pointer' }} onClick={() => handleSort('highScore')}>
+                    High <SortIcon colKey="highScore" sortBy={sortBy} />
+                  </th>
                   <th>Status</th>
                 </tr>
               </thead>

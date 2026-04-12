@@ -88,10 +88,6 @@ function SkeletonRows() {
   ))
 }
 
-function isLiveRound(rounds) {
-  return Object.values(rounds).some(r => r.status === 'playing')
-}
-
 function isPlayerLive(player, rounds) {
   if (player.liveScore === null) return false
   const playingRound = Object.values(rounds).find(r => r.status === 'playing')
@@ -114,7 +110,7 @@ export default function App() {
   const [search, setSearch] = useState('')
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [activeTab, setActiveTab] = useState('gameHistory')
-  const [expanded, setExpanded] = useState(true)
+  const [expanded, setExpanded] = useState(false)
   const [gameStats, setGameStats] = useState(null)
   const [gameStatsLoading, setGameStatsLoading] = useState(false)
   const [rounds, setRounds] = useState({})
@@ -268,7 +264,7 @@ export default function App() {
                             <div 
                               className="player-name"
                               style = {{ cursor: 'pointer'}}
-                              onClick={() => { setSelectedPlayer(p); setActiveTab('gameHistory'); setExpanded(true); setExpandedYear(null) }}
+                              onClick={() => { setSelectedPlayer(p); setActiveTab('gameHistory'); setExpanded(false); setExpandedYear(null) }}
                               >
                               {p.firstName} {p.lastName}
                             </div>
@@ -473,10 +469,7 @@ export default function App() {
                         ))}
                       </tr>
                     </thead>
-                  </table>
-
                   {/* 2026 summary row */}
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, border: '1px solid var(--border)', borderTop: 'none' }}>
                     <tbody>
                       <tr onClick={() => setExpanded(e => !e)} style={{ cursor: 'pointer', background: 'white', borderBottom: '1px solid var(--border)' }}>
                         <td style={{ padding: '10px 12px', fontWeight: 700 }}>{year}</td>
@@ -590,16 +583,16 @@ export default function App() {
                                 {season.avg}
                               </span>
                             </td>
-                            <td style={{ padding: '10px 12px' }}>{season.disposals}</td>
-                            <td style={{ padding: '10px 12px' }}>{season.kicks}</td>
-                            <td style={{ padding: '10px 12px' }}>{season.handballs}</td>
-                            <td style={{ padding: '10px 12px' }}>{season.marks}</td>
-                            <td style={{ padding: '10px 12px' }}>{season.tackles}</td>
-                            <td style={{ padding: '10px 12px' }}>{season.frees_for}</td>
-                            <td style={{ padding: '10px 12px' }}>{season.frees_against}</td>
-                            <td style={{ padding: '10px 12px' }}>{season.hitouts}</td>
-                            <td style={{ padding: '10px 12px' }}>{season.goals}</td>
-                            <td style={{ padding: '10px 12px' }}>{season.behinds}</td>
+                            <td style={{ padding: '10px 12px' }}>{season.disposals?.toFixed(1)}</td>
+                            <td style={{ padding: '10px 12px' }}>{season.kicks?.toFixed(1)}</td>
+                            <td style={{ padding: '10px 12px' }}>{season.handballs?.toFixed(1)}</td>
+                            <td style={{ padding: '10px 12px' }}>{season.marks?.toFixed(1)}</td>
+                            <td style={{ padding: '10px 12px' }}>{season.tackles?.toFixed(1)}</td>
+                            <td style={{ padding: '10px 12px' }}>{season.frees_for?.toFixed(1)}</td>
+                            <td style={{ padding: '10px 12px' }}>{season.frees_against?.toFixed(1)}</td>
+                            <td style={{ padding: '10px 12px' }}>{season.hitouts?.toFixed(1)}</td>
+                            <td style={{ padding: '10px 12px' }}>{season.goals?.toFixed(1)}</td>
+                            <td style={{ padding: '10px 12px' }}>{season.behinds?.toFixed(1)}</td>
                             <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--muted)', fontSize: 12 }}>
                               {expandedYear === season.year ? '▲' : '▼'}
                             </td>

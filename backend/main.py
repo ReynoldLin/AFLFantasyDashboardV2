@@ -38,6 +38,7 @@ CACHE_KEY_PLAYERS = "players:live"
 CACHE_KEY_ROUNDS = "rounds:live"
 HISTORY_PATH = Path("data/player_history.json")
 _history_cache = None
+CACHE_KEY_BREAKEVENS = "breakevens"
 CACHE_TTL = 180  # seconds (3 minutes)
 
 SQUAD_NAMES: dict[int, str] = {

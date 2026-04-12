@@ -46,6 +46,12 @@ function scoreColour(score) {
   return { background: '#ED999B', color: 'var(--text)' }
 }
 
+function gamesColour(games) {
+  if (games >= 20) return { background: '#C8E0A9', color: 'var(--text)' }
+  if (games >= 15)  return { background: '#FEE08D', color: 'var(--text)' }
+  return { background: '#ED999B', color: 'var(--text)' }
+}
+
 function togColour(tog) {
   if (tog >= 80) return { background: '#C8E0A9', color: 'var(--text)' }
   if (tog >= 70) return { background: '#FEE08D', color: 'var(--text)' }
@@ -109,17 +115,6 @@ function priceChangeColour(val) {
   if (val > 0) return '#007a52'
   if (val < 0) return '#d63050'
   return 'var(--text)'
-}
-
-function calcBreakeven(player) {
-  if (!player.price || !player.averagePoints) return null
-  const priceHistory = Object.values(player.prices || {})
-  const prevPrice = priceHistory.length > 1
-    ? priceHistory[priceHistory.length - 2]
-    : player.price
-  return Math.round(
-    (3 * player.price - prevPrice * 15) / (player.price / player.averagePoints)
-  )
 }
 
 export default function App() {
@@ -475,12 +470,14 @@ export default function App() {
                   return vals.length > 0 ? `${vals[vals.length - 1]}%` : '—'
                 })() },
                 { label: null, value: null },
+                { label: 'Live',       
+                  value: selectedPlayer.liveScore,
+                  color: "#df950b" },
                 { label: 'Avg',       value: selectedPlayer.averagePoints?.toFixed(1) },
                 { label: 'Last 3',    value: selectedPlayer.last3Avg },
                 { label: 'Last 5',    value: selectedPlayer.last5Avg },
                 { label: 'Low',      value: selectedPlayer.lowScore },
                 { label: 'High',      value: selectedPlayer.highScore },
-                { label: 'Breakeven', value: calcBreakeven(selectedPlayer) ?? '—' },
               ].map((s, i) => s.label === null ? (
                 <div key={i} style={{ width: '100%' }} />
               ) : (
@@ -576,7 +573,11 @@ export default function App() {
                     <tbody>
                       <tr onClick={() => setExpanded(e => !e)} style={{ cursor: 'pointer', background: 'white', borderBottom: '1px solid var(--border)' }}>
                         <td style={{ padding: '10px 12px', fontWeight: 700 }}>{year}</td>
-                        <td style={{ padding: '10px 12px' }}>{playedGames.length}</td>
+                        <td style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'center'}}>
+                          <span style={{ ...gamesColour(playedGames.length), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 32 }}>
+                            {playedGames.length}
+                          </span>
+                        </td>
                         <td style={{ padding: '10px 12px', fontWeight: 700 }}>
                           <span style={{ ...scoreColour(parseFloat(scoreAvg).toFixed(1)), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
                             {scoreAvg}
@@ -680,7 +681,11 @@ export default function App() {
                             style={{ cursor: 'pointer', background: 'white', borderBottom: '1px solid var(--border)' }}
                           >
                             <td style={{ padding: '10px 12px', fontWeight: 700 }}>{season.year}</td>
-                            <td style={{ padding: '10px 12px' }}>{season.games_played}</td>
+                            <td style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'center'}}>
+                              <span style={{ ...gamesColour(season.games_played), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 32 }}>
+                                {season.games_played}
+                              </span>
+                            </td>
                             <td style={{ padding: '10px 12px', fontWeight: 700 }}>
                               <span style={{ ...scoreColour(season.avg), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
                                 {season.avg?.toFixed(1)}

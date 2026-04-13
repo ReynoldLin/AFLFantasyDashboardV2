@@ -197,7 +197,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [position, setPosition] = useState('All')
-  const [sortBy, setSortBy] = useState({ key: 'averagePoints', dir: 'desc' })
+  const [sortBy, setSortBy] = useState({ key: 'price', dir: 'desc' })
   const [search, setSearch] = useState('')
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [activeTab, setActiveTab] = useState('gameHistory')
@@ -209,7 +209,7 @@ export default function App() {
   const [playerHistory, setPlayerHistory] = useState(null)
   const [expandedYear, setExpandedYear] = useState(null)
   const [teamFilter, setTeamFilter] = useState('All')
-  const [prevSortBy, setPrevSortBy] = useState({ key: 'averagePoints', dir: 'desc' })
+  const [prevSortBy, setPrevSortBy] = useState({ key: 'price', dir: 'desc' })
   const [dfsSummary, setDfsSummary] = useState(null)
   const [expandedGame, setExpandedGame] = useState(null)
 

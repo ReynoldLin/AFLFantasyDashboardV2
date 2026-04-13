@@ -209,6 +209,7 @@ td {
 .status { 
   font-size: 11px;
   font-family: 'Inter', sans-serif;
+  font-weight: 500;
   letter-spacing: 0.5px;
   text-transform: capitalize; 
   border-radius: 4px;
@@ -217,6 +218,7 @@ td {
 .status-playing    { background: #108329; color: #ffffff; }
 .status-injured   { background: #232D42; color: #ffffff; }
 .status-not-playing { background: #E41C1C; color: #ffffff; }
+.status-uncertain { background: #EF791D; color: #ffffff; }
 .status-emergency { background: #B55DAE; color: #ffffff; }
 
 /* Skeleton */

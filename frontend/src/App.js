@@ -22,6 +22,7 @@ const STATUS_LABELS = {
   'injured': 'Injured',
   'not-playing': 'Not Selected',
   'emergency': 'Emergency',
+  'uncertain': 'Uncertain'
 }
 
 function calcFantasyScore(g) {

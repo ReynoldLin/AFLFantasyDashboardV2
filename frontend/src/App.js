@@ -41,10 +41,18 @@ function calcFantasyScore(g) {
 }
 
 function scoreColour(score) {
-  if (score >= 120) return { background: '#e8d5ff', color: 'var(--text)' }
-  if (score >= 100) return { background: '#C8E0A9', color: 'var(--text)' }
-  if (score >= 80) return { background: '#8ddefe', color: 'var(--text)' }
+  if (score >= 120) return { background: '#E8D5FF', color: 'var(--text)' }
+  if (score >= 100) return { background: '#8DDEFE', color: 'var(--text)' }
+  if (score >= 80) return { background: '#C8E0A9', color: 'var(--text)' }
   if (score >= 60)  return { background: '#FEE08D', color: 'var(--text)' }
+  return { background: '#ED999B', color: 'var(--text)' }
+}
+
+function qtrScoreColour(score) {
+  if (score >= 50) return { background: '#E8D5FF', color: 'var(--text)' }
+  if (score >= 30) return { background: '#8DDEFE', color: 'var(--text)' }
+  if (score >= 20) return { background: '#C8E0A9', color: 'var(--text)' }
+  if (score >= 15)  return { background: '#FEE08D', color: 'var(--text)' }
   return { background: '#ED999B', color: 'var(--text)' }
 }
 
@@ -57,6 +65,14 @@ function gamesColour(games) {
 function togColour(tog) {
   if (tog >= 80) return { background: '#C8E0A9', color: 'var(--text)' }
   if (tog >= 70) return { background: '#FEE08D', color: 'var(--text)' }
+  return { background: '#ED999B', color: 'var(--text)' }
+}
+
+function cbaColour(cba) {
+  if (cba >= 80) return { background: '#E8D5FF', color: 'var(--text)' }
+  if (cba >= 70) return { background: '#8DDEFE', color: 'var(--text)' }
+  if (cba >= 50) return { background: '#C8E0A9', color: 'var(--text)' }
+  if (cba >= 30)  return { background: '#FEE08D', color: 'var(--text)' }
   return { background: '#ED999B', color: 'var(--text)' }
 }
 
@@ -746,7 +762,7 @@ export default function App() {
                                 {expandedGame === gameKey && dfs && (
                                   <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
                                     <td colSpan={18} style={{ padding: '8px 16px' }}>
-                                      <table style={{ borderCollapse: 'collapse', fontSize: 12, width: 'auto' }}>
+                                      <table style={{ borderCollapse: 'collapse', fontSize: 13, width: 'auto' }}>
                                         <thead>
                                           <tr style={{ borderBottom: '1px solid var(--border)' }}>
                                             <th style={{ padding: '4px 16px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}></th>
@@ -759,9 +775,21 @@ export default function App() {
                                           {[1, 2, 3, 4].map(q => (
                                             <tr key={q}>
                                               <td style={{ padding: '4px 16px', fontWeight: 600 }}>Q{q}</td>
-                                              <td style={{ padding: '4px 16px', textAlign: 'center' }}>{dfs[`dt_${q}`] ?? '—'}</td>
-                                              <td style={{ padding: '4px 16px', textAlign: 'center' }}>{dfs[`tog_${q}`] ?? '—'}%</td>
-                                              <td style={{ padding: '4px 16px', textAlign: 'center' }}>{dfs[`cba_att_${q}`] ?? '—'}%</td>
+                                              <td style={{ padding: '4px 16px', fontWeight: 700, textAlign: 'center' }}>
+                                                <span style={{ ...qtrScoreColour(dfs[`dt_${q}`] ), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
+                                                  {dfs[`dt_${q}`] ?? '—'}
+                                                </span>
+                                              </td>
+                                              <td style={{ padding: '4px 16px', textAlign: 'center' }}>
+                                                <span style={{ ...togColour(dfs[`tog_${q}`] ), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 50 }}>
+                                                  {dfs[`tog_${q}`] ?? '—'}%
+                                                </span>
+                                              </td>
+                                              <td style={{ padding: '4px 16px', textAlign: 'center' }}>
+                                                <span style={{ ...cbaColour(dfs[`cba_att_${q}`] ), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 50 }}>
+                                                  {dfs[`cba_att_${q}`] ?? '—'}%
+                                                </span>
+                                              </td>
                                             </tr>
                                           ))}
                                         </tbody>
@@ -899,7 +927,7 @@ export default function App() {
                                     {expandedGame === gameKey && dfs && (
                                       <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
                                         <td colSpan={18} style={{ padding: '8px 16px' }}>
-                                          <table style={{ borderCollapse: 'collapse', fontSize: 12, width: 'auto' }}>
+                                          <table style={{ borderCollapse: 'collapse', fontSize: 13, width: 'auto' }}>
                                             <thead>
                                               <tr style={{ borderBottom: '1px solid var(--border)' }}>
                                                 <th style={{ padding: '4px 16px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}></th>
@@ -912,9 +940,21 @@ export default function App() {
                                               {[1, 2, 3, 4].map(q => (
                                                 <tr key={q}>
                                                   <td style={{ padding: '4px 16px', fontWeight: 600 }}>Q{q}</td>
-                                                  <td style={{ padding: '4px 16px', textAlign: 'center' }}>{dfs[`dt_${q}`] ?? '—'}</td>
-                                                  <td style={{ padding: '4px 16px', textAlign: 'center' }}>{dfs[`tog_${q}`] ?? '—'}%</td>
-                                                  <td style={{ padding: '4px 16px', textAlign: 'center' }}>{dfs[`cba_att_${q}`] ?? '—'}%</td>
+                                                  <td style={{ padding: '4px 16px', fontWeight: 700, textAlign: 'center' }}>
+                                                    <span style={{ ...qtrScoreColour(dfs[`dt_${q}`] ), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
+                                                      {dfs[`dt_${q}`] ?? '—'}
+                                                    </span>
+                                                  </td>
+                                                  <td style={{ padding: '4px 16px', textAlign: 'center' }}>
+                                                    <span style={{ ...togColour(dfs[`tog_${q}`] ), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 50 }}>
+                                                      {dfs[`tog_${q}`] ?? '—'}%
+                                                    </span>
+                                                  </td>
+                                                  <td style={{ padding: '4px 16px', textAlign: 'center' }}>
+                                                    <span style={{ ...cbaColour(dfs[`cba_att_${q}`] ), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 50 }}>
+                                                      {dfs[`cba_att_${q}`] ?? '—'}%
+                                                    </span>
+                                                  </td>
                                                 </tr>
                                               ))}
                                             </tbody>

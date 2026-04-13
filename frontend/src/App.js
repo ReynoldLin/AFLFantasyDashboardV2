@@ -158,6 +158,10 @@ const GAME_ROW_HEADERS = ['Rd', 'Opp', 'Score', 'TOG%', 'D', 'K', 'H', 'M', 'T',
 function QuarterBreakdown({ dfs }) {
   if (!dfs) return null
   return (
+    <div>
+      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, color: 'var(--text)' }}>
+        Quarter-by-Quarter Breakdown
+      </div>
     <table style={{ borderCollapse: 'collapse', fontSize: 13, width: 'auto' }}>
       <thead>
         <tr style={{ borderBottom: '1px solid var(--border)' }}>
@@ -189,6 +193,7 @@ function QuarterBreakdown({ dfs }) {
         ))}
       </tbody>
     </table>
+  </div>
   )
 }
 
@@ -207,11 +212,11 @@ export default function App() {
   const [rounds, setRounds] = useState({})
   const [liveOnly, setLiveOnly] = useState(false)
   const [playerHistory, setPlayerHistory] = useState(null)
-  const [expandedYear, setExpandedYear] = useState(null)
+  const [expandedYear, setExpandedYear] = useState(new Set())
   const [teamFilter, setTeamFilter] = useState('All')
   const [prevSortBy, setPrevSortBy] = useState({ key: 'price', dir: 'desc' })
   const [dfsSummary, setDfsSummary] = useState(null)
-  const [expandedGame, setExpandedGame] = useState(null)
+  const [expandedGame, setExpandedGame] = useState(new Set())
 
   const load = useCallback(async () => {
   setLoading(true)
@@ -449,13 +454,25 @@ export default function App() {
                             alt={`${p.firstName} ${p.lastName}`}
                             style={{ width: 72, height: 72, objectFit: 'contain', cursor: 'pointer' }}
                             onError={e => { e.target.style.visibility = 'hidden' }}
-                            onClick={() => setSelectedPlayer(p)}
+                            onClick={() => { 
+                              setSelectedPlayer(p); 
+                              setActiveTab('gameHistory'); 
+                              setExpanded(false); 
+                              setExpandedYear(new Set()); 
+                              setExpandedGame(new Set()) 
+                            }}
                           />
                           <div>
                             <div 
                               className="player-name"
                               style = {{ cursor: 'pointer'}}
-                              onClick={() => { setSelectedPlayer(p); setActiveTab('gameHistory'); setExpanded(false); setExpandedYear(null); setExpandedGame(null) }}
+                              onClick={() => { 
+                                setSelectedPlayer(p); 
+                                setActiveTab('gameHistory'); 
+                                setExpanded(false); 
+                                setExpandedYear(new Set()); 
+                                setExpandedGame(new Set()) 
+                              }}
                               >
                               {p.firstName} {p.lastName}
                             </div>
@@ -699,12 +716,16 @@ export default function App() {
               const headers = ['Year', 'GM', 'Avg', 'D', 'K', 'H', 'M', 'T', 'FF', 'FA', 'HO', 'G', 'B', '']
 
               function GameRow({ roundNumber, opponentId, score, tog, stats, dfs, gameKey, expandedGame, setExpandedGame, colSpan }) {
-                const isExpanded = expandedGame === gameKey
+                const isExpanded = expandedGame.has(gameKey)
                 return (
                   <>
                     <tr
                       style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
-                      onClick={() => setExpandedGame(k => k === gameKey ? null : gameKey)}
+                      onClick={() => setExpandedGame(prev => {
+                        const next = new Set(prev)
+                        next.has(gameKey) ? next.delete(gameKey) : next.add(gameKey)
+                        return next
+                      })}
                     >
                       <td style={cellStyle}>{roundNumber}</td>
                       <td style={cellStyle}>
@@ -882,11 +903,15 @@ export default function App() {
                               goals: season.goals,
                               behinds: season.behinds,
                             }}
-                            isExpanded={expandedYear === season.year}
-                            onToggle={() => setExpandedYear(y => y === season.year ? null : season.year)}
+                            isExpanded={expandedYear.has(season.year)}
+                            onToggle={() => setExpandedYear(prev => {
+                              const next = new Set(prev)
+                              next.has(season.year) ? next.delete(season.year) : next.add(season.year)
+                              return next
+                            })}
                           />
 
-                          {expandedYear === season.year && (
+                          {expandedYear.has(season.year) && (
                             <>
                               <tr style={{ background: 'var(--surface2)', borderBottom: '1px solid var(--border)' }}>
                                 {GAME_ROW_HEADERS.map(h => (

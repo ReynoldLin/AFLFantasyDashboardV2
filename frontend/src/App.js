@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { fetchPlayers, fetchPlayerGameStats, fetchPlayerHistory, fetchRounds } from './api'
 import './App.css'
+import { TEAM_COLOURS } from './teamColours'
 
 const POSITIONS = ['All', 'DEF', 'MID', 'RUC', 'FWD']
 const SORT_OPTIONS = [
@@ -57,6 +58,10 @@ function togColour(tog) {
   if (tog >= 80) return { background: '#C8E0A9', color: 'var(--text)' }
   if (tog >= 70) return { background: '#FEE08D', color: 'var(--text)' }
   return { background: '#ED999B', color: 'var(--text)' }
+}
+
+function getTeamColour(squadId) {
+  return TEAM_COLOURS[squadId] || { primary: 'var(--accent)', secondary: '#ffffff' }
 }
 
 function getStatus(status) {
@@ -522,14 +527,12 @@ export default function App() {
                   return vals.length > 0 ? `${vals[vals.length - 1]}%` : '—'
                 })() },
                 { label: null, value: null },
-                { label: 'Live',       
-                  value: selectedPlayer.liveScore,
-                  color: "#df950b" },
-                { label: 'Avg',       value: selectedPlayer.averagePoints?.toFixed(1) },
-                { label: 'Last 3',    value: selectedPlayer.last3Avg },
-                { label: 'Last 5',    value: selectedPlayer.last5Avg },
-                { label: 'Low',      value: selectedPlayer.lowScore },
-                { label: 'High',      value: selectedPlayer.highScore },
+                { label: 'Live', value: selectedPlayer.liveScore },
+                { label: 'Avg', value: selectedPlayer.averagePoints?.toFixed(1) },
+                { label: 'Last 3', value: selectedPlayer.last3Avg },
+                { label: 'Last 5', value: selectedPlayer.last5Avg },
+                { label: 'Low', value: selectedPlayer.lowScore },
+                { label: 'High', value: selectedPlayer.highScore },
               ].map((s, i) => s.label === null ? (
                 <div key={i} style={{ width: '100%' }} />
               ) : (
@@ -541,26 +544,41 @@ export default function App() {
             </div>
 
             {/* Tabs */}
-            <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #e0e4ed', marginTop: 10, marginBottom: 20 }}>
-              {['charts', 'gameHistory'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    padding: '8px 16px',
-                    border: 'none',
-                    borderBottom: activeTab === tab ? '2px solid var(--accent)' : '2px solid transparent',
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                    fontWeight: activeTab === tab ? 600 : 400,
-                    color: activeTab === tab ? 'var(--accent)' : '#7a8499',
-                    fontFamily: 'Inter, sans-serif',
-                  }}
-                >
-                  {tab === 'charts' ? 'Charts' : 'Game History'}
-                </button>
-              ))}
+            <div style={{ 
+              display: 'flex', 
+              gap: 0, 
+              borderBottom: `2px solid ${getTeamColour(selectedPlayer.squadId).primary}`, 
+              marginTop: 20, 
+              marginBottom: 20,
+              background: getTeamColour(selectedPlayer.squadId).primary,
+              borderRadius: '6px 6px 0 0',
+              padding: '0px 4px'
+            }}>
+            {['charts', 'gameHistory'].map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  padding: '8px 16px',
+                  border: 'none',
+                  borderBottom: activeTab === tab
+                    ? `2px solid ${getTeamColour(selectedPlayer.squadId).secondary}`
+                    : '2px solid transparent',
+                  background: activeTab === tab
+                    ? `${getTeamColour(selectedPlayer.squadId).primary}15`
+                    : 'transparent',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  opacity: activeTab === tab ? 1 : 0.7,
+                  color: getTeamColour(selectedPlayer.squadId).secondary,
+                  fontFamily: 'Inter, sans-serif',
+                  marginBottom: -2,
+                }}
+              >
+                {tab === 'charts' ? 'Charts' : 'Game History'}
+              </button>
+            ))}
             </div>
 
             {/* Tab content */}
@@ -610,7 +628,7 @@ export default function App() {
               const historicalYears = playerHistory ? [...playerHistory].reverse() : []
               
               return (
-                <div style={{ marginLeft: 6, marginRight: 6 }}>
+                <div>
 
                   {/* Shared header */}
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, border: '1px solid var(--border)', borderRadius: '8px 8px 0 0', overflow: 'hidden' }}>

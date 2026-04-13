@@ -41,8 +41,8 @@ function calcFantasyScore(g) {
 }
 
 function scoreColour(score) {
-  if (score >= 120) return { background: '#E8D5FF', color: 'var(--text)' }
-  if (score >= 100) return { background: '#8DDEFE', color: 'var(--text)' }
+  if (score >= 120) return { background: '#8DDEFE', color: 'var(--text)' }
+  if (score >= 100) return { background: '#E8D5FF', color: 'var(--text)' }
   if (score >= 80) return { background: '#C8E0A9', color: 'var(--text)' }
   if (score >= 60)  return { background: '#FEE08D', color: 'var(--text)' }
   return { background: '#ED999B', color: 'var(--text)' }
@@ -175,12 +175,12 @@ function QuarterBreakdown({ dfs }) {
                 {dfs[`dt_${q}`] ?? '—'}
               </span>
             </td>
-            <td style={{ padding: '4px 16px', textAlign: 'center' }}>
+            <td style={{ padding: '4px 16px', fontWeight: 700, textAlign: 'center' }}>
               <span style={{ ...togColour(dfs[`tog_${q}`]), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 50 }}>
                 {dfs[`tog_${q}`] ?? '—'}%
               </span>
             </td>
-            <td style={{ padding: '4px 16px', textAlign: 'center' }}>
+            <td style={{ padding: '4px 16px', fontWeight: 700, textAlign: 'center' }}>
               <span style={{ ...cbaColour(dfs[`cba_att_${q}`]), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 50 }}>
                 {dfs[`cba_att_${q}`] ?? '—'}%
               </span>
@@ -715,7 +715,7 @@ export default function App() {
                           {score}
                         </span>
                       </td>
-                      <td style={cellStyle}>
+                      <td style={{ ...cellStyle, fontWeight: 700 }}>
                         <span style={{ ...togColour(tog), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
                           {tog}%
                         </span>
@@ -756,8 +756,8 @@ export default function App() {
                         {games}
                       </span>
                     </td>
-                    <td style={{ padding: '10px 12px', fontWeight: 700 }}>
-                      <span style={{ ...scoreColour(parseFloat(avg)), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
+                    <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700 }}>
+                      <span style={{ ...scoreColour(parseFloat(avg)), textAlign: 'center', borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 50 }}>
                         {parseFloat(avg).toFixed(1)}
                       </span>
                     </td>

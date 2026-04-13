@@ -38,7 +38,7 @@ CACHE_KEY_PLAYERS = "players:live"
 CACHE_KEY_ROUNDS = "rounds:live"
 HISTORY_PATH = Path("data/player_history.json")
 _history_cache = None
-CACHE_KEY_BREAKEVENS = "breakevens"
+CACHE_KEY_DFS = "dfs:{player_id}"
 CACHE_TTL = 180  # seconds (3 minutes)
 
 SQUAD_NAMES: dict[int, str] = {
@@ -264,6 +264,39 @@ async def get_player_history(player_id: int):
     data = history.get(str(player_id))
     if not data:
         raise HTTPException(status_code=404, detail=f"No history found for player {player_id}.")
+    return data
+
+@app.get("/api/players/{player_id}/dfs_summary", summary="Get detailed player summary from DFS Australia")
+async def get_dfs_summary(player_id: int):
+    cache_key = f"dfs:{player_id}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            response = await client.post(
+                "https://dfsaustralia.com/wp-admin/admin-ajax.php",
+                data={
+                    "action": "afl_fantasy_player_summary_call_mysql",
+                    "playerId": f"CD_I{player_id}",
+                },
+                headers={
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Referer": "https://dfsaustralia.com/afl-fantasy-player-summary/",
+                    "User-Agent": "Mozilla/5.0",
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="DFS Australia timed out.")
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=502, detail=f"DFS Australia returned {e.response.status_code}.")
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=502, detail=f"Could not reach DFS Australia: {e}")
+
+    cache.set(cache_key, data, ttl_seconds=3600)
     return data
 
 # ── Debug / utility ───────────────────────────────────────────────────────────

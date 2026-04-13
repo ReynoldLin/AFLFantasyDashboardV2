@@ -29,3 +29,9 @@ export async function fetchPlayerHistory(playerId) {
   if (!res.ok) throw new Error('Failed to fetch player history')
   return res.json()
 }
+
+export async function fetchDFSSummary(playerId) {
+  const res = await fetch(`${BASE}/players/${playerId}/dfs_summary`)
+  if (!res.ok) throw new Error('Failed to fetch DFS summary')
+  return res.json()
+}

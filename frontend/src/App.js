@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchPlayers, fetchPlayerGameStats, fetchPlayerHistory, fetchRounds } from './api'
+import { fetchPlayers, fetchPlayerGameStats, fetchPlayerHistory, fetchDFSSummary, fetchRounds } from './api'
 import './App.css'
 import { TEAM_COLOURS } from './teamColours'
 
@@ -153,6 +153,8 @@ export default function App() {
   const [expandedYear, setExpandedYear] = useState(null)
   const [teamFilter, setTeamFilter] = useState('All')
   const [prevSortBy, setPrevSortBy] = useState({ key: 'averagePoints', dir: 'desc' })
+  const [dfsSummary, setDfsSummary] = useState(null)
+  const [expandedGame, setExpandedGame] = useState(null)
 
   const load = useCallback(async () => {
   setLoading(true)
@@ -191,6 +193,14 @@ export default function App() {
     fetchPlayerHistory(selectedPlayer.id)
       .then(setPlayerHistory)
       .catch(() => setPlayerHistory(null))
+  }, [selectedPlayer])
+
+  useEffect(() => {
+    if (!selectedPlayer) return
+    setDfsSummary(null)
+    fetchDFSSummary(selectedPlayer.id)
+      .then(setDfsSummary)
+      .catch(() => setDfsSummary(null))
   }, [selectedPlayer])
 
   useEffect(() => {
@@ -388,7 +398,7 @@ export default function App() {
                             <div 
                               className="player-name"
                               style = {{ cursor: 'pointer'}}
-                              onClick={() => { setSelectedPlayer(p); setActiveTab('gameHistory'); setExpanded(false); setExpandedYear(null) }}
+                              onClick={() => { setSelectedPlayer(p); setActiveTab('gameHistory'); setExpanded(false); setExpandedYear(null); setExpandedGame(null) }}
                               >
                               {p.firstName} {p.lastName}
                             </div>
@@ -475,7 +485,7 @@ export default function App() {
             onClick={e => e.stopPropagation()}
             style={{
               background: 'white', borderRadius: 12, padding: 24,
-              width: '90%', maxWidth: 800,
+              width: '90%', maxWidth: 1000,
               maxHeight: '85vh', overflowY: 'auto',
               boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
             }}
@@ -624,8 +634,16 @@ export default function App() {
               }).filter(Boolean)
 
               const cellStyle = { padding: '9px 10px', textAlign: 'center' }
-              const headers = ['Year', 'GM', 'Avg', 'D', 'K', 'H', 'M', 'T', 'FF', 'FA', 'HO', 'G', 'B', '']
+              const headers = ['YEAR', 'GM', 'AVG', 'D', 'K', 'H', 'M', 'T', 'FF', 'FA', 'HO', 'G', 'B', '']
               const historicalYears = playerHistory ? [...playerHistory].reverse() : []
+
+              const dfsGames = dfsSummary?.combinedGames || []
+
+              function getDfsGame(roundNumber, year) {
+                return dfsGames.find(g =>
+                  parseInt(g.round) === roundNumber && g.year === String(year)
+                )
+              }
               
               return (
                 <div>
@@ -670,17 +688,24 @@ export default function App() {
                       {expanded && (
                         <>
                           <tr style={{ background: 'var(--surface2)', borderBottom: '1px solid var(--border)' }}>
-                            {['Rd', 'Opp', 'Score', 'TOG%', 'D', 'K', 'HB', 'M', 'T', 'FF', 'FA', 'HO', 'G', 'B'].map(h => (
-                              <td key={h} style={{ ...cellStyle, color: 'var(--muted)', fontWeight: 600, fontSize: 11 }}>{h}</td>
-                            ))}
+                            {['Rd', 'Opp', 'Score', 'TOG%', 'D', 'K', 'H', 'M', 'T', 'FF', 'FA', 'HO', 'G', 'B', 'CBA%', 'KI', 'RC%',''].map(h => (
+                            <td key={h} style={{ ...cellStyle, color: 'var(--muted)', fontWeight: 600, fontSize: 11 }}>{h}</td>
+                          ))}
                           </tr>
                           {gameStatsLoading ? (
                             <tr><td colSpan={14} style={{ padding: 16, textAlign: 'center', color: 'var(--muted)' }}>Loading...</td></tr>
                           ) : rows.map(row => {
                             if (row.type === 'played') {
                               const g = row.game
+                              const dfs = getDfsGame(row.rn, 2026)
+                              const gameKey = `2026-${row.rn}`
                               return (
-                                <tr key={row.rn} style={{ borderBottom: '1px solid var(--border)' }}>
+                              <>
+                                <tr
+                                  key={row.rn}
+                                  style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
+                                  onClick={() => setExpandedGame(k => k === gameKey ? null : gameKey)}
+                                >
                                   <td style={cellStyle}>{row.rn}</td>
                                   <td style={cellStyle}>
                                     {row.opponentId && <img src={`/logos/${row.opponentId}.svg`} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} onError={e => e.target.style.visibility = 'hidden'} />}
@@ -705,14 +730,53 @@ export default function App() {
                                   <td style={cellStyle}>{g.hitouts}</td>
                                   <td style={cellStyle}>{g.goals}</td>
                                   <td style={cellStyle}>{g.behinds}</td>
+                                  {(() => {
+                                    const dfs = getDfsGame(row.rn, 2026)
+                                    return (
+                                      <>
+                                        <td style={cellStyle}>{dfs?.centreBounceAttendancePercentage ?? '—'}%</td>
+                                        <td style={cellStyle}>{dfs?.kickins ?? '—'}</td>
+                                        <td style={cellStyle}>{dfs?.ruckContestPercentage ?? '—'}%</td>
+                                      </>
+                                    )
+                                  })()}
+                                  <td style={{ ...cellStyle, color: 'var(--muted)', fontSize: 11 }}>{expandedGame === gameKey ? '▲' : '▼'}</td>
                                 </tr>
-                              )
+
+                                {expandedGame === gameKey && dfs && (
+                                  <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
+                                    <td colSpan={18} style={{ padding: '8px 16px' }}>
+                                      <table style={{ borderCollapse: 'collapse', fontSize: 12, width: 'auto' }}>
+                                        <thead>
+                                          <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                                            <th style={{ padding: '4px 16px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}></th>
+                                            <th style={{ padding: '4px 16px', textAlign: 'center', color: 'var(--muted)', fontWeight: 600 }}>Score</th>
+                                            <th style={{ padding: '4px 16px', textAlign: 'center', color: 'var(--muted)', fontWeight: 600 }}>TOG%</th>
+                                            <th style={{ padding: '4px 16px', textAlign: 'center', color: 'var(--muted)', fontWeight: 600 }}>CBA%</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {[1, 2, 3, 4].map(q => (
+                                            <tr key={q}>
+                                              <td style={{ padding: '4px 16px', fontWeight: 600 }}>Q{q}</td>
+                                              <td style={{ padding: '4px 16px', textAlign: 'center' }}>{dfs[`dt_${q}`] ?? '—'}</td>
+                                              <td style={{ padding: '4px 16px', textAlign: 'center' }}>{dfs[`tog_${q}`] ?? '—'}%</td>
+                                              <td style={{ padding: '4px 16px', textAlign: 'center' }}>{dfs[`cba_att_${q}`] ?? '—'}%</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </td>
+                                  </tr>
+                                )}
+                              </>
+                            )
                             }
                             if (row.type === 'bye') return (
                               <tr key={row.rn} style={{ borderBottom: '1px solid var(--border)', opacity: 0.5, background: 'var(--surface2)' }}>
                                 <td style={cellStyle}>{row.rn}</td>
                                 <td style={cellStyle}><div style={{ width: 24, height: 24 }} /></td>
-                                <td colSpan={12} style={{ ...cellStyle, textAlign: 'center' }}>
+                                <td colSpan={16} style={{ ...cellStyle, textAlign: 'center' }}>
                                   <span style={{ fontSize: 11, background: '#9de7d6', color: '#022e24', borderRadius: 4, padding: '1px 8px' }}>BYE</span>
                                 </td>
                               </tr>
@@ -723,7 +787,7 @@ export default function App() {
                                 <td style={cellStyle}>
                                   {row.opponentId && <img src={`/logos/${row.opponentId}.svg`} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} onError={e => e.target.style.visibility = 'hidden'} />}
                                 </td>
-                                <td colSpan={12} style={{ ...cellStyle, textAlign: 'center' }}>
+                                <td colSpan={16} style={{ ...cellStyle, textAlign: 'center' }}>
                                   <span style={{ fontSize: 11, background: '#fde8e8', color: 'var(--danger)', borderRadius: 4, padding: '1px 8px' }}>DNP</span>
                                 </td>
                               </tr>
@@ -734,7 +798,7 @@ export default function App() {
                                 <td style={cellStyle}>
                                   {row.opponentId && <img src={`/logos/${row.opponentId}.svg`} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} onError={e => e.target.style.visibility = 'hidden'} />}
                                 </td>
-                                <td colSpan={12} />
+                                <td colSpan={16} />
                               </tr>
                             )
                             return null
@@ -779,34 +843,88 @@ export default function App() {
                           {expandedYear === season.year && (
                             <>
                               <tr style={{ background: 'var(--surface2)', borderBottom: '1px solid var(--border)' }}>
-                                {['Rd', 'Opp', 'Score', 'D', 'K', 'HB', 'M', 'T', 'FF', 'FA', 'HO', 'G', 'B', ''].map(h => (
+                                {['Rd', 'Opp', 'Score', 'TOG5', 'D', 'K', 'H', 'M', 'T', 'FF', 'FA', 'HO', 'G', 'B', 'CBA%', 'KI', 'RC%', ''].map(h => (
                                   <td key={h} style={{ ...cellStyle, color: 'var(--muted)', fontWeight: 600, fontSize: 11 }}>{h}</td>
                                 ))}
                               </tr>
-                              {season.games.map(g => (
-                                <tr key={g.roundNumber} style={{ borderBottom: '1px solid var(--border)' }}>
-                                  <td style={cellStyle}>{g.roundNumber}</td>
-                                  <td style={cellStyle}>
-                                    {g.opponentSquadId && <img src={`/logos/${g.opponentSquadId}.svg`} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} onError={e => e.target.style.visibility = 'hidden'} />}
-                                  </td>
-                                  <td style={{ ...cellStyle, fontWeight: 700 }}>
-                                    <span style={{ ...scoreColour(g.score), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
-                                      {g.score}
-                                    </span>
-                                  </td>
-                                  <td style={cellStyle}>{g.disposals}</td>
-                                  <td style={cellStyle}>{g.kicks}</td>
-                                  <td style={cellStyle}>{g.handballs}</td>
-                                  <td style={cellStyle}>{g.marks}</td>
-                                  <td style={cellStyle}>{g.tackles}</td>
-                                  <td style={cellStyle}>{g.freesFor}</td>
-                                  <td style={cellStyle}>{g.freesAgainst}</td>
-                                  <td style={cellStyle}>{g.hitouts}</td>
-                                  <td style={cellStyle}>{g.goals}</td>
-                                  <td style={cellStyle}>{g.behinds}</td>
-                                  <td style={cellStyle} />
-                                </tr>
-                              ))}
+                              {season.games.map(g => {
+                                const dfs = getDfsGame(g.roundNumber, season.year)
+                                const gameKey = `${season.year}-${g.roundNumber}`
+                                return (
+                                  <>
+                                    <tr
+                                      key={g.roundNumber}
+                                      style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
+                                      onClick={() => setExpandedGame(k => k === gameKey ? null : gameKey)}
+                                    >
+                                      <td style={cellStyle}>{g.roundNumber}</td>
+                                      <td style={cellStyle}>
+                                        {g.opponentSquadId && (
+                                          <img src={`/logos/${g.opponentSquadId}.svg`} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} onError={e => e.target.style.visibility = 'hidden'} />
+                                        )}
+                                      </td>
+                                      <td style={{ ...cellStyle, fontWeight: 700 }}>
+                                        <span style={{ ...scoreColour(g.score), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
+                                          {g.score}
+                                        </span>
+                                      </td>
+                                      <td style={cellStyle}>
+                                        <span style={{ ...togColour(g.timeOnGround), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
+                                          {g.timeOnGround}%
+                                        </span>
+                                      </td>
+                                      <td style={cellStyle}>{g.disposals}</td>
+                                      <td style={cellStyle}>{g.kicks}</td>
+                                      <td style={cellStyle}>{g.handballs}</td>
+                                      <td style={cellStyle}>{g.marks}</td>
+                                      <td style={cellStyle}>{g.tackles}</td>
+                                      <td style={cellStyle}>{g.freesFor}</td>
+                                      <td style={cellStyle}>{g.freesAgainst}</td>
+                                      <td style={cellStyle}>{g.hitouts}</td>
+                                      <td style={cellStyle}>{g.goals}</td>
+                                      <td style={cellStyle}>{g.behinds}</td>
+                                      {(() => {
+                                        const dfs = getDfsGame(g.roundNumber, season.year)
+                                        return (
+                                          <>
+                                            <td style={cellStyle}>{dfs?.centreBounceAttendancePercentage ?? '—'}%</td>
+                                            <td style={cellStyle}>{dfs?.kickins ?? '—'}</td>
+                                            <td style={cellStyle}>{dfs?.ruckContestPercentage ?? '—'}%</td>
+                                          </>
+                                        )
+                                      })()}
+                                      <td style={{ ...cellStyle, color: 'var(--muted)', fontSize: 11 }}>{expandedGame === gameKey ? '▲' : '▼'}</td>
+                                    </tr>
+
+                                    {expandedGame === gameKey && dfs && (
+                                      <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
+                                        <td colSpan={18} style={{ padding: '8px 16px' }}>
+                                          <table style={{ borderCollapse: 'collapse', fontSize: 12, width: 'auto' }}>
+                                            <thead>
+                                              <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                                                <th style={{ padding: '4px 16px', textAlign: 'left', color: 'var(--muted)', fontWeight: 600 }}></th>
+                                                <th style={{ padding: '4px 16px', textAlign: 'center', color: 'var(--muted)', fontWeight: 600 }}>Score</th>
+                                                <th style={{ padding: '4px 16px', textAlign: 'center', color: 'var(--muted)', fontWeight: 600 }}>TOG%</th>
+                                                <th style={{ padding: '4px 16px', textAlign: 'center', color: 'var(--muted)', fontWeight: 600 }}>CBA%</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                              {[1, 2, 3, 4].map(q => (
+                                                <tr key={q}>
+                                                  <td style={{ padding: '4px 16px', fontWeight: 600 }}>Q{q}</td>
+                                                  <td style={{ padding: '4px 16px', textAlign: 'center' }}>{dfs[`dt_${q}`] ?? '—'}</td>
+                                                  <td style={{ padding: '4px 16px', textAlign: 'center' }}>{dfs[`tog_${q}`] ?? '—'}%</td>
+                                                  <td style={{ padding: '4px 16px', textAlign: 'center' }}>{dfs[`cba_att_${q}`] ?? '—'}%</td>
+                                                </tr>
+                                              ))}
+                                            </tbody>
+                                          </table>
+                                        </td>
+                                      </tr>
+                                    )}
+                                  </>
+                                )
+                              })}
                             </>
                           )}
                         </>

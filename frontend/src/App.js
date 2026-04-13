@@ -71,13 +71,25 @@ function PosBadge({ positions }) {
       </span>
     )
   }
-  const c1 = POS_COLOURS[positions[0]]
-  const c2 = POS_COLOURS[positions[1]]
-  return (
-    <span className="pos-badge" style={{ background: `linear-gradient(120deg, ${c1} 50%, ${c2} 50%)` }}>
-      {positions.join('/')}
-    </span>
-  )
+  if (positions.length === 2) {
+    const c1 = POS_COLOURS[positions[0]]
+    const c2 = POS_COLOURS[positions[1]]
+    return (
+      <span className="pos-badge" style={{ background: `linear-gradient(125deg, ${c1} 50%, ${c2} 50%)` }}>
+        {positions.join('/')}
+      </span>
+    )
+  }
+  if (positions.length >= 3) {
+    const c1 = POS_COLOURS[positions[0]]
+    const c2 = POS_COLOURS[positions[1]]
+    const c3 = POS_COLOURS[positions[2]]
+    return (
+      <span className="pos-badge" style={{ background: `linear-gradient(125deg, ${c1} 33%, ${c2} 33%, ${c2} 66%, ${c3} 66%)` }}>
+        {positions.join('/')}
+      </span>
+    )
+  }
 }
 
 function StatusLabel({ status }) {

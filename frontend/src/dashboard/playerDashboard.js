@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { fetchPlayers, fetchRounds } from '../api'
 import '../App.css'
-import { scoreColour } from '../helpers/colourCoding'
-import { PosBadge } from '../App.js'
+import { scoreColour, PosBadge } from '../helpers/colourCoding'
 
 const POSITIONS = ['All', 'DEF', 'MID', 'RUC', 'FWD']
 const SORT_OPTIONS = [
@@ -56,7 +55,7 @@ function SortIcon({ colKey, sortBy }) {
   return <span style={{ color: 'var(--accent)', marginLeft: 4 }}>{sortBy.dir === 'desc' ? '↓' : '↑'}</span>
 }
 
-export function PlayerTable({onPlayerClick}) {
+export function PlayerTable({onPlayerClick, rounds}) {
     const [players, setPlayers] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -67,8 +66,6 @@ export function PlayerTable({onPlayerClick}) {
 
     const [sortBy, setSortBy] = useState({ key: 'price', dir: 'desc' })
     const [prevSortBy, setPrevSortBy] = useState({ key: 'price', dir: 'desc' })
-
-    const [rounds, setRounds] = useState({}) 
     
     const load = useCallback(async () => {
         setLoading(true)
@@ -86,12 +83,6 @@ export function PlayerTable({onPlayerClick}) {
             setLoading(false)
         }
     }, [position, sortBy])
-
-    useEffect(() => {
-        fetchRounds()
-          .then(setRounds)
-          .catch(() => {})
-      }, [])
 
     useEffect(() => {
         load()

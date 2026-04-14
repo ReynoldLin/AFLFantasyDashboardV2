@@ -28,6 +28,10 @@ export const POS_COLOURS = {
   FWD: '#ABF5CA',
 }
 
+export function getTeamColour(squadId) {
+  return TEAM_COLOURS[squadId] || { primary: 'var(--accent)', secondary: '#ffffff' }
+}
+
 export function scoreColour(score) {
   if (score >= 120) return { background: '#8DDEFE', color: 'var(--text)' }
   if (score >= 100) return { background: '#E8D5FF', color: 'var(--text)' }
@@ -68,4 +72,33 @@ export function priceChangeColour(val) {
   if (val > 0) return '#007a52'
   if (val < 0) return '#d63050'
   return 'var(--text)'
+}
+
+export function PosBadge({ positions }) {
+  if (positions.length === 1) {
+    return (
+      <span className="pos-badge" style={{ background: POS_COLOURS[positions[0]] }}>
+        {positions[0]}
+      </span>
+    )
+  }
+  if (positions.length === 2) {
+    const c1 = POS_COLOURS[positions[0]]
+    const c2 = POS_COLOURS[positions[1]]
+    return (
+      <span className="pos-badge" style={{ background: `linear-gradient(125deg, ${c1} 50%, ${c2} 50%)` }}>
+        {positions.join('/')}
+      </span>
+    )
+  }
+  if (positions.length >= 3) {
+    const c1 = POS_COLOURS[positions[0]]
+    const c2 = POS_COLOURS[positions[1]]
+    const c3 = POS_COLOURS[positions[2]]
+    return (
+      <span className="pos-badge" style={{ background: `linear-gradient(125deg, ${c1} 33%, ${c2} 33%, ${c2} 66%, ${c3} 66%)` }}>
+        {positions.join('/')}
+      </span>
+    )
+  }
 }

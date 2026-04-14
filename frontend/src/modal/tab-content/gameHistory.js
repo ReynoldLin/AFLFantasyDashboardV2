@@ -98,7 +98,6 @@ function GameRow({ roundNumber, opponentId, score, tog, stats, dfs, gameKey, exp
     )
 }
 
-// Quarter breakdown table
 function QuarterBreakdown({ dfs }) {
   if (!dfs) return null
   return (
@@ -201,6 +200,45 @@ export function GameHistory({
 
     return (
         <div style={{ marginLeft: 6, marginRight: 6 }}>
+
+            {/* Expand buttons */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <button
+                    onClick={() => {
+                        setExpanded(!expanded)
+                        setExpandedYear(prev =>
+                            prev.size === historicalYears.length ? new Set() : new Set(historicalYears.map(s => s.year)))
+                    }}
+                    style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--surface2)', cursor: 'pointer', fontSize: 12 }}
+                >
+                    Expand All Years
+                </button>
+
+                <button
+                    onClick={() => {
+                        const allGameKeys = new Set()
+                        rows.forEach(row => {
+                            if (row.type === 'played') allGameKeys.add(`2026-${row.rn}`)
+                        })
+                        historicalYears.forEach(season => {
+                            season.games.forEach(g => allGameKeys.add(`${season.year}-${g.roundNumber}`))
+                        })
+                        setExpandedGame(prev =>
+                            prev.size === allGameKeys.size ? new Set() : allGameKeys
+                        )
+                    }}
+                    disabled={!expanded && expandedYear.size === 0}
+                    style={{ 
+                    padding: '5px 12px', borderRadius: 6, border: '1px solid var(--border)', 
+                    background: 'var(--surface2)', cursor: !expanded && expandedYear.size === 0 ? 'not-allowed' : 'pointer', 
+                    fontSize: 12,
+                    opacity: !expanded && expandedYear.size === 0 ? 0.4 : 1
+                    }}
+                >
+                    Expand All Games
+                </button>
+            </div>
+
             <table style={{ 
                 width: '100%', 
                 borderCollapse: 'collapse', 

@@ -35,7 +35,7 @@ export function Tabs({
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     style={{
-                        padding: '8px 16px',
+                        padding: '12px 16px',
                         border: 'none',
                         borderBottom: activeTab === tab
                         ? `2px solid ${getTeamColour(selectedPlayer.squadId).secondary}`
@@ -44,7 +44,7 @@ export function Tabs({
                         ? `${getTeamColour(selectedPlayer.squadId).primary}`
                         : 'transparent',
                         cursor: 'pointer',
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: 600,
                         opacity: activeTab === tab ? 1 : 0.7,
                         color: getTeamColour(selectedPlayer.squadId).secondary,

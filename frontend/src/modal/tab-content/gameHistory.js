@@ -1,4 +1,4 @@
-import { scoreColour, togColour, gamesColour, qtrScoreColour, cbaColour } from "../../helpers/colourCoding"
+import { scoreColour, togColour, gamesColour, qtrScoreColour, cbaColour, getTeamColour } from "../../helpers/colourCoding"
 
 const year = 2026
 const summaryCell = { padding: '10px 12px', textAlign: 'center' }
@@ -209,7 +209,15 @@ export function GameHistory({
                         setExpandedYear(prev =>
                             prev.size === historicalYears.length ? new Set() : new Set(historicalYears.map(s => s.year)))
                     }}
-                    style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--surface2)', cursor: 'pointer', fontSize: 12 }}
+                    style={{ 
+                        padding: '5px 12px', 
+                        borderRadius: 6, 
+                        border: '1px solid var(--border)', 
+                        background: 'var(--surface2)',
+                        cursor: 'pointer', 
+                        fontSize: 12,
+                        fontWeight: 700
+                    }}
                 >
                     Expand All Years
                 </button>
@@ -229,10 +237,14 @@ export function GameHistory({
                     }}
                     disabled={!expanded && expandedYear.size === 0}
                     style={{ 
-                    padding: '5px 12px', borderRadius: 6, border: '1px solid var(--border)', 
-                    background: 'var(--surface2)', cursor: !expanded && expandedYear.size === 0 ? 'not-allowed' : 'pointer', 
-                    fontSize: 12,
-                    opacity: !expanded && expandedYear.size === 0 ? 0.4 : 1
+                        padding: '5px 12px',
+                        borderRadius: 6, 
+                        border: '1px solid var(--border)', 
+                        background: 'var(--surface2)', 
+                        cursor: !expanded && expandedYear.size === 0 ? 'not-allowed' : 'pointer', 
+                        fontSize: 12,
+                        fontWeight: 700,
+                        opacity: !expanded && expandedYear.size === 0 ? 0.4 : 1
                     }}
                 >
                     Expand All Games

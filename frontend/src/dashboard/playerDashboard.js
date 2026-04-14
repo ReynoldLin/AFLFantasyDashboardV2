@@ -286,7 +286,7 @@ export function PlayerTable({onPlayerClick, rounds}) {
                                     style={{ width: 42, height: 42, objectFit: 'contain' }}
                                 />
                                 </td>
-                                <td>${(p.price.toLocaleString())}</td>
+                                <td className="text-val">${(p.price.toLocaleString())}</td>
                                 <td style={{ textAlign: 'center' }}>
                                 {p.liveScore !== null ? (
                                     <span style={{
@@ -312,18 +312,18 @@ export function PlayerTable({onPlayerClick, rounds}) {
                                     }} />
                                 )}
                                 </td>
-                                <td className="muted-val">{p.averagePoints?.toFixed(1) || '—'}</td>
+                                <td className="normal-val">{p.averagePoints?.toFixed(1) || '—'}</td>
                                 <td className="muted-val">{p.last3Avg || '—'}</td>
                                 <td className="muted-val">{p.last5Avg || '—'}</td>
                                 <td className="muted-val">{p.lowScore || '—'}</td>
                                 <td className="muted-val">{p.highScore || '—'}</td>
-                                <td style={{ color: p.roundPriceChange > 0 ? '#007a52' : p.roundPriceChange < 0 ? '#d63050' : 'var(--muted)' }}>
+                                <td style={{ fontWeight: 700, color: p.roundPriceChange > 0 ? '#007a52' : p.roundPriceChange < 0 ? '#d63050' : 'var(--muted)' }}>
                                 {p.roundPriceChange ? `$${p.roundPriceChange.toLocaleString()}` : '—'}
                                 </td>
-                                <td style={{ color: p.seasonPriceChange > 0 ? '#007a52' : p.seasonPriceChange < 0 ? '#d63050' : 'var(--muted)' }}>
+                                <td style={{ fontWeight: 700, color: p.seasonPriceChange > 0 ? '#007a52' : p.seasonPriceChange < 0 ? '#d63050' : 'var(--muted)' }}>
                                 {p.seasonPriceChange ? `$${p.seasonPriceChange.toLocaleString()}` : '—'}
                                 </td>
-                                <td className="text-val">
+                                <td className="normal-val">
                                 {(() => {
                                     const vals = Object.values(p.ownership || {})
                                     return vals.length > 0 ? `${vals[vals.length - 1]}%` : '—'

@@ -190,7 +190,8 @@ td {
 /* Cell styles */
 .player-name { font-size: 14px; font-weight: 500; }
 .team-name   { color: var(--muted); font-size: 12px; }
-.text-val    { color: var(--text)}
+.text-val    { color: var(--text); font-weight: 700;}
+.normal-val    { color: var(--text); font-weight: 500;}
 .muted-val   { color: var(--muted); }
 
 @keyframes pulse-dot {

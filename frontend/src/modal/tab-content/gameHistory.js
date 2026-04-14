@@ -64,7 +64,7 @@ function GameRow({ roundNumber, opponentId, score, tog, stats, dfs, gameKey, exp
                     </span>
                 </td>
                 <td style={{ ...cellStyle, fontWeight: 700 }}>
-                    <span style={{ ...togColour(tog), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
+                    <span style={{ ...togColour(tog), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 50 }}>
                         {tog}%
                     </span>
                 </td>
@@ -78,7 +78,11 @@ function GameRow({ roundNumber, opponentId, score, tog, stats, dfs, gameKey, exp
                 <td style={cellStyle}>{stats.hitouts}</td>
                 <td style={cellStyle}>{stats.goals}</td>
                 <td style={cellStyle}>{stats.behinds}</td>
-                <td style={cellStyle}>{dfs?.centreBounceAttendancePercentage ?? '—'}%</td>
+                <td style={{...cellStyle, fontWeight: 700}}>
+                    <span style={{ ...cbaColour(dfs?.centreBounceAttendancePercentage), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 50 }}>
+                        {dfs?.centreBounceAttendancePercentage ?? '—'}%
+                    </span>
+                </td>
                 <td style={cellStyle}>{dfs?.kickins ?? '—'}</td>
                 <td style={cellStyle}>{dfs?.ruckContestPercentage ?? '—'}%</td>
                 <td style={{ ...cellStyle, color: 'var(--muted)', fontSize: 11 }}>{isExpanded ? '▲' : '▼'}</td>

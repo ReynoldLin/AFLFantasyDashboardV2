@@ -55,14 +55,16 @@ export function gamesColour(games) {
 }
 
 export function togColour(tog) {
+  if (tog >= 90) return { background: '#8DDEFE', color: 'var(--text)' }
+  if (tog >= 85) return { background: '#E8D5FF', color: 'var(--text)' }
   if (tog >= 80) return { background: '#C8E0A9', color: 'var(--text)' }
   if (tog >= 70) return { background: '#FEE08D', color: 'var(--text)' }
   return { background: '#ED999B', color: 'var(--text)' }
 }
 
 export function cbaColour(cba) {
-  if (cba >= 80) return { background: '#E8D5FF', color: 'var(--text)' }
-  if (cba >= 70) return { background: '#8DDEFE', color: 'var(--text)' }
+  if (cba >= 80) return { background: '#8DDEFE', color: 'var(--text)' }
+  if (cba >= 70) return { background: '#E8D5FF', color: 'var(--text)' }
   if (cba >= 50) return { background: '#C8E0A9', color: 'var(--text)' }
   if (cba >= 30)  return { background: '#FEE08D', color: 'var(--text)' }
   return { background: '#ED999B', color: 'var(--text)' }

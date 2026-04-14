@@ -8,6 +8,7 @@ A tool to view AFL Fantasy scores
 ```bash
 python -m venv venv
 venv\Scripts\Activate
+pip install -r requirements.txt
 cd backend
 uvicorn main:app --reload --port 8000
 ```

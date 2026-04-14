@@ -30,31 +30,39 @@ export function Modal({
             }}
         >
             <div onClick={e => e.stopPropagation()}
-            style={{
-                background: 'white', borderRadius: 12, padding: 24,
-                width: '90%', maxWidth: 1000,
-                maxHeight: '85vh', overflowY: 'auto',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-            }}
+                style={{
+                    background: 'white', borderRadius: 12, padding: 24,
+                    width: '90%', maxWidth: 1000,
+                    maxHeight: '85vh', overflowY: 'auto',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                }}
             >
             <button onClick={() => setSelectedPlayer(null)}
-            style={{ float: 'right', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 18, color: '#888' }}
-            >
-            ✕
+                style={{ float: 'right', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 18, color: '#888' }}
+                >
+                ✕
             </button>
             
-            {/* Header */}
-            <ModalHeader selectedPlayer={selectedPlayer}/>
+                {/* Header */}
+                <ModalHeader selectedPlayer={selectedPlayer}/>
 
-            {/* Tabs */}
-            <Tabs 
-                selectedPlayer={selectedPlayer}
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-            />
-            {/* Tab content */}
-
-            
+                {/* Tabs */}
+                <Tabs 
+                    selectedPlayer={selectedPlayer}
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    gameStatsLoading={gameStatsLoading}
+                    gameStats={gameStats}
+                    dfsSummary={dfsSummary}
+                    rounds={rounds}
+                    playerHistory={playerHistory}
+                    expanded={expanded}
+                    setExpanded={setExpanded}
+                    expandedGame={expandedGame}
+                    setExpandedGame={setExpandedGame}
+                    expandedYear={expandedYear}
+                    setExpandedYear={setExpandedYear}
+                />  
             </div>
         </div>
     )

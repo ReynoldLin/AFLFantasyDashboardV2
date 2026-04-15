@@ -1,4 +1,5 @@
 import { getTeamColour } from '../helpers/colourCoding'
+import { PrevGame } from './tab-content/prevGame'
 import { Charts } from './tab-content/charts'
 import { GameHistory } from './tab-content/gameHistory'
 
@@ -30,7 +31,7 @@ export function Tabs({
                 borderRadius: '6px 6px 0 0',
                 padding: '0px 4px'
                 }}>
-                {['charts', 'gameHistory'].map(tab => (
+                {['prevGame', 'charts', 'gameHistory'].map(tab => (
                     <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -52,10 +53,14 @@ export function Tabs({
                         marginBottom: -2,
                     }}
                     >
-                    {tab === 'charts' ? 'Charts' : 'Game History'}
+                    {tab === 'prevGame' ? 'Previous Game' : tab === 'charts' ? 'Charts' : 'Game History'}
                     </button>
                 ))}
             </div>
+
+            {activeTab === 'prevGame' && (
+                <PrevGame/>
+            )}
 
             {activeTab === 'charts' && (
                 <Charts/>

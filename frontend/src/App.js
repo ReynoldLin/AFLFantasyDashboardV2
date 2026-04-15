@@ -6,7 +6,7 @@ import { Modal } from './modal/modal'
 
 export default function App() {
   const [selectedPlayer, setSelectedPlayer] = useState(null) 
-  const [activeTab, setActiveTab] = useState('gameHistory') 
+  const [activeTab, setActiveTab] = useState('prevGame') 
   const [expanded, setExpanded] = useState(false) 
   const [gameStats, setGameStats] = useState(null)
   const [gameStatsLoading, setGameStatsLoading] = useState(false)
@@ -61,7 +61,7 @@ export default function App() {
       {/* Main Dashboard */}
       <PlayerTable onPlayerClick={(p) => {
         setSelectedPlayer(p)
-        setActiveTab('gameHistory')
+        setActiveTab('prevGame')
         setExpanded(false)
         setExpandedYear(new Set())
         setExpandedGame(new Set())

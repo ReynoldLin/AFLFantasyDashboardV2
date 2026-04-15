@@ -59,7 +59,12 @@ export function Tabs({
             </div>
 
             {activeTab === 'prevGame' && (
-                <PrevGame/>
+                <PrevGame
+                    selectedPlayer={selectedPlayer}
+                    gameStats={gameStats}
+                    gameStatsLoading={gameStatsLoading}
+                    dfsSummary={dfsSummary}
+                    rounds={rounds}/>
             )}
 
             {activeTab === 'charts' && (

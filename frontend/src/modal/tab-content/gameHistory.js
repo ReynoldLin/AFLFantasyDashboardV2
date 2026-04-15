@@ -1,12 +1,12 @@
-import { scoreColour, togColour, gamesColour, qtrScoreColour, cbaColour, getTeamColour } from "../../helpers/colourCoding"
+import { scoreColour, togColour, gamesColour, qtrScoreColour, cbaColour } from "../../helpers/colourCoding"
 
 const year = 2026
 const summaryCell = { padding: '10px 12px', textAlign: 'center' }
-const cellStyle = { padding: '9px 10px', textAlign: 'center' }
+export const cellStyle = { padding: '9px 10px', textAlign: 'center' }
 const YEAR_SUMMARY_HEADERS = ['Year', 'GM', 'Avg', 'D', 'K', 'H', 'M', 'T', 'FF', 'FA', 'HO', 'G', 'B', '']
 const GAME_ROW_HEADERS = ['Rd', 'Opp', 'Score', 'TOG%', 'D', 'K', 'H', 'M', 'T', 'FF', 'FA', 'HO', 'G', 'B', 'CBA%', 'KI', 'RC%', '']
 
-function calcFantasyScore(g) {
+export function calcFantasyScore(g) {
   return (
     g.kicks * 3 +
     g.handballs * 2 +

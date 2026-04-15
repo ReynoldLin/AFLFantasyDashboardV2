@@ -27,49 +27,53 @@ export function PrevGame({selectedPlayer, gameStats, gameStatsLoading, dfsSummar
 
     return (
         <table>
-            <tr style={{ background: 'var(--surface2)', borderBottom: '1px solid var(--border)' }}>
-                {GAME_ROW_HEADERS.map(h => (
-                    <td key={h} style={{ ...cellStyle, color: 'var(--muted)', fontWeight: 600, fontSize: 11 }}>{h}</td>
-                ))}
-            </tr>
-            <tr>
-                <td style={cellStyle}>{roundData.roundNumber}</td>
-                <td style={cellStyle}>
-                    <img 
-                        src={`/logos/${opponentId}.svg`} 
-                        alt="" 
-                        style={{ width: 24, height: 24, objectFit: 'contain' }} 
-                        onError={e => e.target.style.visibility = 'hidden'} 
-                    />
-                </td>
-                <td style={{...cellStyle, fontWeight:700}}>
-                    <span style={{ ...scoreColour(score), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
-                        {score}
-                    </span>
-                </td>
-                <td style={{...cellStyle, fontWeight:700}}>
-                    <span style={{ ...togColour(prevGameStats.timeOnGround), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
-                        {prevGameStats.timeOnGround}%
-                    </span>
-                </td>
-                <td style={cellStyle}>{prevGameStats.disposals}</td>
-                <td style={cellStyle}>{prevGameStats.kicks}</td>
-                <td style={cellStyle}>{prevGameStats.handballs}</td>
-                <td style={cellStyle}>{prevGameStats.marks}</td>
-                <td style={cellStyle}>{prevGameStats.tackles}</td>
-                <td style={cellStyle}>{prevGameStats.freesFor}</td>
-                <td style={cellStyle}>{prevGameStats.freesAgainst}</td>
-                <td style={cellStyle}>{prevGameStats.hitouts}</td>
-                <td style={cellStyle}>{prevGameStats.goals}</td>
-                <td style={cellStyle}>{prevGameStats.behinds}</td>
-                <td style={{...cellStyle, fontWeight:700}}>
-                    <span style={{ ...cbaColour(dfs?.centreBounceAttendancePercentage), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
-                        {dfs?.centreBounceAttendancePercentage}%
-                    </span>
-                </td>
-                <td style={cellStyle}>{dfs?.kickins}</td>
-                <td style={cellStyle}>{dfs?.ruckContestPercentage}%</td>
-            </tr>
+            <thead>
+                <tr style={{ background: 'var(--surface2)', borderBottom: '1px solid var(--border)' }}>
+                    {GAME_ROW_HEADERS.map(h => (
+                        <td key={h} style={{ ...cellStyle, color: 'var(--muted)', fontWeight: 600, fontSize: 11 }}>{h}</td>
+                    ))}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style={cellStyle}>{roundData.roundNumber}</td>
+                    <td style={cellStyle}>
+                        <img 
+                            src={`/logos/${opponentId}.svg`} 
+                            alt="" 
+                            style={{ width: 24, height: 24, objectFit: 'contain' }} 
+                            onError={e => e.target.style.visibility = 'hidden'} 
+                        />
+                    </td>
+                    <td style={{...cellStyle, fontWeight:700}}>
+                        <span style={{ ...scoreColour(score), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
+                            {score}
+                        </span>
+                    </td>
+                    <td style={{...cellStyle, fontWeight:700}}>
+                        <span style={{ ...togColour(prevGameStats.timeOnGround), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
+                            {prevGameStats.timeOnGround}%
+                        </span>
+                    </td>
+                    <td style={cellStyle}>{prevGameStats.disposals}</td>
+                    <td style={cellStyle}>{prevGameStats.kicks}</td>
+                    <td style={cellStyle}>{prevGameStats.handballs}</td>
+                    <td style={cellStyle}>{prevGameStats.marks}</td>
+                    <td style={cellStyle}>{prevGameStats.tackles}</td>
+                    <td style={cellStyle}>{prevGameStats.freesFor}</td>
+                    <td style={cellStyle}>{prevGameStats.freesAgainst}</td>
+                    <td style={cellStyle}>{prevGameStats.hitouts}</td>
+                    <td style={cellStyle}>{prevGameStats.goals}</td>
+                    <td style={cellStyle}>{prevGameStats.behinds}</td>
+                    <td style={{...cellStyle, fontWeight:700}}>
+                        <span style={{ ...cbaColour(dfs?.centreBounceAttendancePercentage), borderRadius: 6, padding: '2px 8px', display: 'inline-block', minWidth: 40 }}>
+                            {dfs?.centreBounceAttendancePercentage}%
+                        </span>
+                    </td>
+                    <td style={cellStyle}>{dfs?.kickins}</td>
+                    <td style={cellStyle}>{dfs?.ruckContestPercentage}%</td>
+                </tr>
+            </tbody>
         </table>
     )
 }

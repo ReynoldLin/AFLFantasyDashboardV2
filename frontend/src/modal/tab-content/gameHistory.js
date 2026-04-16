@@ -98,7 +98,7 @@ function GameRow({ roundNumber, opponentId, score, tog, stats, dfs, gameKey, exp
     )
 }
 
-function QuarterBreakdown({ dfs }) {
+export function QuarterBreakdown({ dfs }) {
   if (!dfs) return null
   return (
     <div>

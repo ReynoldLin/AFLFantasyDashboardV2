@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { fetchPlayerGameStats, fetchPlayerHistory, fetchDFSSummary, fetchRounds } from './api'
 import './App.css'
 import { PlayerTable } from './dashboard/playerDashboard'
@@ -20,6 +20,7 @@ export default function App() {
     if (!selectedPlayer) return
     const load = () => {
       setGameStatsLoading(true)
+      setGameStats(null)
       fetchPlayerGameStats(selectedPlayer.id)
         .then(setGameStats)
         .catch(() => setGameStats(null))

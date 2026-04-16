@@ -62,6 +62,7 @@ export function PlayerTable({onPlayerClick, rounds}) {
     const [position, setPosition] = useState('All')
     const [liveOnly, setLiveOnly] = useState(false)
     const [teamFilter, setTeamFilter] = useState('All')
+    const [priceFilter, setPriceFilter] = useState('All')
     const [search, setSearch] = useState('') 
 
     const [sortBy, setSortBy] = useState({ key: 'price', dir: 'desc' })
@@ -94,20 +95,25 @@ export function PlayerTable({onPlayerClick, rounds}) {
         .filter(p => !search || `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase()))
         .filter(p => !liveOnly || isPlayerLive(p, rounds))
         .filter(p => teamFilter === 'All' || p.teamName === teamFilter)
+        .filter(p => {
+            if (priceFilter === 'All') return true;
+            const [min, max] = priceFilter.split('-').map(Number);
+            return p.price >= min && p.price < max;
+        })
         .sort((a, b) => {
             if (liveOnly && sortBy.key === 'liveScore') {
-            const aScore = a.liveScore ?? -1
-            const bScore = b.liveScore ?? -1
-            const mul = sortBy.dir === 'desc' ? -1 : 1
+                const aScore = a.liveScore ?? -1
+                const bScore = b.liveScore ?? -1
+                const mul = sortBy.dir === 'desc' ? -1 : 1
             return mul * (aScore - bScore)
             }
             const { key, dir } = sortBy
             const mul = dir === 'desc' ? -1 : 1
             if (key === 'lastName') return mul * (a.lastName || '').localeCompare(b.lastName || '')
             if (key === 'ownership') {
-            const aOwn = Object.values(a.ownership || {}).pop() ?? 0
-            const bOwn = Object.values(b.ownership || {}).pop() ?? 0
-            return mul * (aOwn - bOwn)
+                const aOwn = Object.values(a.ownership || {}).pop() ?? 0
+                const bOwn = Object.values(b.ownership || {}).pop() ?? 0
+                return mul * (aOwn - bOwn)
             }
             return mul * ((a[key] ?? 0) - (b[key] ?? 0))
         })
@@ -163,6 +169,25 @@ export function PlayerTable({onPlayerClick, rounds}) {
                         <option key={team} value={team}>{team}</option>
                         ))
                     }
+                    </select>
+
+                    <select
+                    className="filter-select"
+                    value={priceFilter}
+                    onChange={e => setPriceFilter(e.target.value)}
+                    >
+                    <option value="All">All Prices</option>
+                    <option value="0-300000">Under $300k</option>
+                    <option value="300000-400000">$300k - $400k</option>
+                    <option value="400000-500000">$400k - $500k</option>
+                    <option value="500000-600000">$500k - $600k</option>
+                    <option value="600000-700000">$600k - $700k</option>
+                    <option value="700000-800000">$700k - $800k</option>
+                    <option value="800000-900000">$800k - $900k</option>
+                    <option value="900000-1000000">$900k - $1m</option>
+                    <option value="1000000-1100000">$1m - $1.1m</option>
+                    <option value="1100000-1200000">$1.1m - $1.2m</option>
+                    <option value="1200000-1300000">$1.2m - $1.3m</option>
                     </select>
 
                     <div style={{ position: 'relative', marginLeft: 'auto' }}>

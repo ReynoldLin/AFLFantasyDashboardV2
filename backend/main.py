@@ -12,7 +12,9 @@ from typing import Optional
 from datetime import datetime
 import json
 from pathlib import Path
-
+from dotenv import load_dotenv
+load_dotenv()
+import os
 import cache
 
 # ── App setup ────────────────────────────────────────────────────────────────
@@ -298,6 +300,24 @@ async def get_dfs_summary(player_id: int):
 
     cache.set(cache_key, data, ttl_seconds=3600)
     return data
+
+@app.get("/api/team", summary="Get AFL Fantasy team for a user")
+async def get_team(user_id: int = Query(..., description="AFL Fantasy user ID")):
+    url = f"https://fantasy.afl.com.au/api/en/fantasy/team/show?userId={user_id}"
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            response = await client.get(url, headers={
+                "Cookie": os.getenv("AFL_COOKIE", ""),
+                "User-Agent": "Mozilla/5.0",
+            })
+            response.raise_for_status()
+            return response.json()
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="AFL API timed out.")
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=502, detail=f"AFL API returned {e.response.status_code}.")
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=502, detail=f"Could not reach AFL API: {e}")
 
 # ── Debug / utility ───────────────────────────────────────────────────────────
 

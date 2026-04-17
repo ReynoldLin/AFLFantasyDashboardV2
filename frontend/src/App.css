@@ -7,7 +7,7 @@
   --border:   #e0e4ed;
   --accent:   #0f96da;
   --danger:   #d63050;
-  --text:     #1a1e2e;
+  --text:     #1a2e28;
   --muted:    #7a8499;
   --radius:   10px;
 }
@@ -53,6 +53,25 @@ body {
   font-size: 13px;
   color: var(--muted);
 }
+.header-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.header-tab {
+  padding: 6px 18px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+.header-tab:hover   { opacity: 0.7; }
+.header-tab.active  { opacity: 1; border-bottom: 2px solid var(--accent); }
 
 /* Main */
 main {

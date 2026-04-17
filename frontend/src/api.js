@@ -35,3 +35,9 @@ export async function fetchDFSSummary(playerId) {
   if (!res.ok) throw new Error('Failed to fetch DFS summary')
   return res.json()
 }
+
+export async function fetchTeam(userId) {
+  const res = await fetch(`${BASE}/team?user_id=${userId}`)
+  if (!res.ok) throw new Error('Failed to fetch team')
+  return res.json()
+}

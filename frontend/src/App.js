@@ -3,8 +3,10 @@ import { fetchPlayerGameStats, fetchPlayerHistory, fetchDFSSummary, fetchRounds 
 import './App.css'
 import { PlayerTable } from './dashboard/playerDashboard'
 import { Modal } from './modal/modal'
+import { Team } from './dashboard/teamViewer'
 
 export default function App() {
+  const [appTab, setAppTab] = useState('players')
   const [selectedPlayer, setSelectedPlayer] = useState(null) 
   const [activeTab, setActiveTab] = useState('prevGame') 
   const [expanded, setExpanded] = useState(false) 
@@ -56,38 +58,62 @@ export default function App() {
   return (
     <div>
       <header className="header">
-        <h1>AFL FANTASY DASHBOARD</h1>
+        <h1>AFL FANTASY</h1>
+        <nav className="header-tabs">
+          <button
+            className={`header-tab ${appTab === 'players' ? 'active' : ''}`}
+            onClick={() => setAppTab('players')}
+          >
+            Players
+          </button>
+          <button
+            className={`header-tab ${appTab === 'team' ? 'active' : ''}`}
+            onClick={() => setAppTab('team')}
+          >
+            Team
+          </button>
+        </nav>
       </header>
 
-      {/* Main Dashboard */}
-      <PlayerTable onPlayerClick={(p) => {
-        setSelectedPlayer(p)
-        setActiveTab('prevGame')
-        setExpanded(false)
-        setExpandedYear(new Set())
-        setExpandedGame(new Set())
-      }}
-        rounds={rounds}
-      />
+      {appTab === 'players' && (
+        <>
+          {/* Main Dashboard */}
+          <PlayerTable onPlayerClick={(p) => {
+            setSelectedPlayer(p)
+            setActiveTab('prevGame')
+            setExpanded(false)
+            setExpandedYear(new Set())
+            setExpandedGame(new Set())
+          }}
+            rounds={rounds}
+          />
 
-      {/* Modal */}
-      <Modal 
-        selectedPlayer={selectedPlayer}
-        setSelectedPlayer={setSelectedPlayer}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        expanded={expanded}
-        setExpanded={setExpanded}
-        expandedYear={expandedYear}
-        setExpandedYear={setExpandedYear}
-        expandedGame={expandedGame}
-        setExpandedGame={setExpandedGame}
-        gameStats={gameStats}
-        gameStatsLoading={gameStatsLoading}
-        playerHistory={playerHistory}
-        dfsSummary={dfsSummary}
-        rounds={rounds}
-      />
+          {/* Modal */}
+          <Modal 
+            selectedPlayer={selectedPlayer}
+            setSelectedPlayer={setSelectedPlayer}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            expanded={expanded}
+            setExpanded={setExpanded}
+            expandedYear={expandedYear}
+            setExpandedYear={setExpandedYear}
+            expandedGame={expandedGame}
+            setExpandedGame={setExpandedGame}
+            gameStats={gameStats}
+            gameStatsLoading={gameStatsLoading}
+            playerHistory={playerHistory}
+            dfsSummary={dfsSummary}
+            rounds={rounds}
+          />
+        </>
+      )}
+
+      {appTab === 'team' && (
+        <>
+          <Team/>
+        </>
+      )}
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { PosBadge, priceChangeColour } from "../helpers/colourCoding"
+import '../App.css'
 
 export function ModalHeader({selectedPlayer}) {
     return (
@@ -25,7 +26,7 @@ export function ModalHeader({selectedPlayer}) {
                     style={{ width: 64, height: 64, objectFit: 'contain', marginLeft: 'auto', marginRight: 16}}
                 />
             </div>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div className="stat-badges">
                 {[
                     { label: 'Games',     value: selectedPlayer.gamesPlayed },
                     { label: 'Price',     value: `$${selectedPlayer.price.toLocaleString()}` },
@@ -49,8 +50,8 @@ export function ModalHeader({selectedPlayer}) {
                 ].map((s, i) => s.label === null ? (
                     <div key={i} style={{ width: '100%' }} />
                         ) : (
-                            <div key={s.label} style={{ background: '#f5f7fa', borderRadius: 8, padding: '10px 16px', textAlign: 'center', minWidth: 80 }}>
-                            <div style={{ fontSize: 11, color: '#7a8499', marginBottom: 2 }}>{s.label}</div>
+                            <div key={s.label} className='stat-badge-bg'>
+                            <div className='stat-badge-title'>{s.label}</div>
                             <div style={{ fontSize: 18, fontWeight: 700, color: s.color || 'inherit' }}>{s.value ?? '—'}</div>
                     </div>
                 ))}

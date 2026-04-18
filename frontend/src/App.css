@@ -219,7 +219,11 @@ td {
 }
 
 /* Position badge */
-.pos-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+.pos-badges { 
+  display: flex; 
+  gap: 4px; 
+  flex-wrap: wrap; 
+}
 .pos-badge {
   border-radius: 4px;
   padding: 1px 7px;
@@ -229,6 +233,30 @@ td {
   letter-spacing: 1px;
   color: #1a1a1a;
   border: none;
+}
+
+/* Stat badge*/ 
+.stat-badges { 
+  display: flex; 
+  gap: 12px; 
+  flex-wrap: wrap
+}
+.stat-badge-bg {
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 10px 16px;
+  text-align: center;
+  min-width: 80;
+}
+.stat-badge-title {
+  font-size: 11px;
+  color: #7a8499;
+  margin-bottom: 2px;
+}
+.stat-badge-data {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text)
 }
 
 /* Status */

@@ -259,6 +259,20 @@ td {
   color: var(--text)
 }
 
+/* Player card */
+.player-card {
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  min-width: 180px;
+}
+
 /* Status */
 .status { 
   font-size: 11px;

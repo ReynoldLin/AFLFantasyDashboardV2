@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { fetchTeam, fetchPlayers } from '../api'
 import { PlayerCard } from './playerCard'
 
-export function Team() {
+export function Team({ rounds, onPlayerClick }) {
     const [team, setTeam] = useState(null)
     const [playerDataMap, setPlayerDataMap] = useState({})
     const [loading, setLoading] = useState(true)
@@ -31,6 +31,7 @@ export function Team() {
     } = team
 
     const positionColour = { DEF: '#4a90d9', MID: '#7ed321', RUC: '#f5a623', FWD: '#e05c5c' }
+    const POSITION_ORDER = ['DEF', 'MID', 'RUC', 'FWD']
 
     const renderPlayers = (ids, dimmed = false) => (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: 8 }}>
@@ -42,6 +43,7 @@ export function Team() {
                     captainId={captainId}
                     viceCaptainId={viceCaptainId}
                     dimmed={dimmed}
+                    onPlayerClick={onPlayerClick}
                 />
             ))}
         </div>
@@ -62,12 +64,12 @@ export function Team() {
 
             {/* Lineup */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {Object.entries(lineup).map(([pos, ids]) => (
+                {POSITION_ORDER.map(pos => (
                     <div key={pos} style={{ background: 'var(--surface)', borderRadius: 8, overflow: 'hidden' }}>
                         <div style={{ background: positionColour[pos], padding: '6px 12px', fontWeight: 700, fontSize: 13 }}>
                             {pos}
                         </div>
-                        {renderPlayers(ids)}
+                        {renderPlayers(lineup[pos])}
                     </div>
                 ))}
 

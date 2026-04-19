@@ -111,7 +111,35 @@ export default function App() {
 
       {appTab === 'team' && (
         <>
-          <Team/>
+          <Team
+            onPlayerClick={(p) => {
+            setSelectedPlayer(p)
+            setActiveTab('prevGame')
+            setExpanded(false)
+            setExpandedYear(new Set())
+            setExpandedGame(new Set())
+          }}
+            rounds={rounds}
+          />
+
+          {/* Modal */}
+          <Modal 
+            selectedPlayer={selectedPlayer}
+            setSelectedPlayer={setSelectedPlayer}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            expanded={expanded}
+            setExpanded={setExpanded}
+            expandedYear={expandedYear}
+            setExpandedYear={setExpandedYear}
+            expandedGame={expandedGame}
+            setExpandedGame={setExpandedGame}
+            gameStats={gameStats}
+            gameStatsLoading={gameStatsLoading}
+            playerHistory={playerHistory}
+            dfsSummary={dfsSummary}
+            rounds={rounds}
+          />
         </>
       )}
     </div>

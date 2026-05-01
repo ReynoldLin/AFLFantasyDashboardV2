@@ -26,7 +26,7 @@ export function Team({ rounds, onPlayerClick }) {
     if (error)   return <div style={{ padding: 32, color: 'var(--danger)' }}>{error}</div>
 
     const {
-        teamName, roundPoints, totalPoints, overallRank,
+        teamName, roundPoints, totalPoints, roundRank, overallRank,
         lineup, bench, captainId, viceCaptainId, utilityId
     } = team
 
@@ -54,11 +54,24 @@ export function Team({ rounds, onPlayerClick }) {
 
             {/* Header */}
             <div style={{ marginBottom: 24 }}>
-                <h2 style={{ margin: 0 }}>{teamName}</h2>
-                <div style={{ display: 'flex', gap: 32, marginTop: 8, color: 'var(--muted)', fontSize: 14 }}>
-                    <span>Round Points: <strong style={{ color: 'var(--text)' }}>{roundPoints}</strong></span>
-                    <span>Total Points: <strong style={{ color: 'var(--text)' }}>{totalPoints}</strong></span>
-                    <span>Overall Rank: <strong style={{ color: 'var(--text)' }}>#{overallRank.toLocaleString()}</strong></span>
+                <h2 style={{ margin: 12 }}>{teamName}</h2>
+                <div className="stat-badges">
+                    <div className="stat-badge-bg">
+                        <div className="stat-badge-title">Round Points</div>
+                        <div className="stat-badge-data">{roundPoints}</div>
+                    </div>
+                    <div className="stat-badge-bg">
+                        <div className="stat-badge-title">Total Points</div>
+                        <div className="stat-badge-data">{totalPoints}</div>
+                    </div>
+                    <div className="stat-badge-bg">
+                        <div className="stat-badge-title">Round Rank</div>
+                        <div className="stat-badge-data">#{roundRank.toLocaleString()}</div>
+                    </div>
+                    <div className="stat-badge-bg">
+                        <div className="stat-badge-title">Overall Rank</div>
+                        <div className="stat-badge-data">#{overallRank.toLocaleString()}</div>
+                    </div>
                 </div>
             </div>
 

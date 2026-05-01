@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchTeam, fetchPlayers } from '../api'
 import { PlayerCard } from './playerCard'
+import { POS_COLOURS } from '../helpers/colourCoding'
 
 export function Team({ rounds, onPlayerClick }) {
     const [team, setTeam] = useState(null)
@@ -30,7 +31,6 @@ export function Team({ rounds, onPlayerClick }) {
         lineup, bench, captainId, viceCaptainId, utilityId
     } = team
 
-    const positionColour = { DEF: '#4a90d9', MID: '#7ed321', RUC: '#f5a623', FWD: '#e05c5c' }
     const POSITION_ORDER = ['DEF', 'MID', 'RUC', 'FWD']
 
     const renderPlayers = (ids, dimmed = false) => (
@@ -79,7 +79,7 @@ export function Team({ rounds, onPlayerClick }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {POSITION_ORDER.map(pos => (
                     <div key={pos} style={{ background: 'var(--surface)', borderRadius: 8, overflow: 'hidden' }}>
-                        <div style={{ background: positionColour[pos], padding: '6px 12px', fontWeight: 700, fontSize: 13 }}>
+                        <div style={{ background: POS_COLOURS[pos], padding: '6px 12px', fontWeight: 700, fontSize: 13 }}>
                             {pos}
                         </div>
                         {renderPlayers(lineup[pos])}
@@ -96,7 +96,7 @@ export function Team({ rounds, onPlayerClick }) {
 
                 {/* Utility */}
                 <div style={{ background: 'var(--surface)', borderRadius: 8, overflow: 'hidden' }}>
-                    <div style={{ background: '#9b59b6', padding: '6px 12px', fontWeight: 700, fontSize: 13 }}>
+                    <div style={{ background: 'var(--muted)', padding: '6px 12px', fontWeight: 700, fontSize: 13 }}>
                         UTILITY
                     </div>
                     {renderPlayers([utilityId], true)}

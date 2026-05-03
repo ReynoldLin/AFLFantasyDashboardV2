@@ -248,6 +248,13 @@ td {
   text-align: center;
   min-width: 80;
 }
+.stat-badge-bg-team {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 10px 16px;
+  text-align: center;
+  min-width: 80;
+}
 .stat-badge-title {
   font-size: 11px;
   color: #7a8499;
@@ -270,7 +277,7 @@ td {
   align-items: center;
   gap: 6px;
   position: relative;
-  min-width: 180px;
+  width: 180px;
 }
 
 /* Status */

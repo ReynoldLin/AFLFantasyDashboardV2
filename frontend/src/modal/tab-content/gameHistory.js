@@ -91,6 +91,7 @@ function GameRow({ roundNumber, opponentId, score, tog, stats, dfs, gameKey, exp
                 <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
                 <td colSpan={colSpan} style={{ padding: '8px 16px' }}>
                     <QuarterBreakdown dfs={dfs} />
+                    <ZoneBar dfs={dfs} />
                 </td>
                 </tr>
             )}
@@ -137,6 +138,61 @@ export function QuarterBreakdown({ dfs }) {
       </tbody>
     </table>
   </div>
+  )
+}
+
+export function ZoneBar({ dfs }) {
+  if (!dfs) return null
+
+  const zones = [
+    { key: 'defensive50',       label: 'D50', color: '#185FA5', textColor: '#E6F1FB' },
+    { key: 'defensiveMidfield', label: 'DM',  color: '#1D9E75', textColor: '#E1F5EE' },
+    { key: 'attackingMidfield', label: 'AM',  color: '#EF9F27', textColor: '#412402' },
+    { key: 'attacking50',       label: 'F50', color: '#D85A30', textColor: '#FAECE7' },
+  ]
+
+  const total = zones.reduce((s, z) => s + (parseInt(dfs[z.key]) || 0), 0) || 1
+
+  return (
+    <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, color: 'var(--text)' }}>
+        Possessions by Zone
+      </div>
+      <div style={{ display: 'flex', height: 22, borderRadius: 6, overflow: 'hidden', maxWidth: 300 }}>
+        {zones.map(z => {
+          const val = parseInt(dfs[z.key]) || 0
+          const pct = (val / total * 100).toFixed(1)
+          return (
+            <div
+              key={z.key}
+              style={{
+                width: `${pct}%`,
+                background: z.color,
+                color: z.textColor,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 10,
+                fontWeight: 600,
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
+                minWidth: 0,
+              }}
+            >
+              {val > 0 ? val : ''}
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ display: 'flex', gap: 14, marginTop: 12, flexWrap: 'wrap' }}>
+        {zones.map(z => (
+          <div key={z.key} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>
+            <div style={{ width: 10, height: 10, borderRadius: 2, background: z.color, flexShrink: 0 }} />
+            {z.label}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 

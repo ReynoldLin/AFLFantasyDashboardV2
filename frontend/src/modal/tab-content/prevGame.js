@@ -1,5 +1,5 @@
 import { scoreColour, togColour, cbaColour } from "../../helpers/colourCoding"
-import { calcFantasyScore, cellStyle, QuarterBreakdown } from "./gameHistory"
+import { calcFantasyScore, cellStyle, QuarterBreakdown, ZoneBar } from "./gameHistory"
 
 const GAME_ROW_HEADERS = ['Rd', 'Opp', 'Score', 'TOG%', 'D', 'K', 'H', 'M', 'T', 'FF', 'FA', 'HO', 'G', 'B', 'CBA%', 'KI', 'RC%']
 
@@ -77,8 +77,8 @@ export function PrevGame({selectedPlayer, gameStats, gameStatsLoading, dfsSummar
             </tbody>
         </table>
         <div style={{padding: '8px 16px', background: 'var(--surface2)'}}>
-            <QuarterBreakdown
-                dfs={dfs}/>
+            <QuarterBreakdown dfs={dfs}/>
+            <ZoneBar dfs={dfs}/>
         </div>
         </>
     )

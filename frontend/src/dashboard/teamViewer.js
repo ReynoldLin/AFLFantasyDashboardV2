@@ -57,7 +57,7 @@ export function Team({ rounds, onPlayerClick }) {
         )
     }
         
-    
+    const localeFormat = (number) => number != null ? `#${number.toLocaleString()}` : '-';
 
     return (
         <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto', color: 'var(--text)' }}>
@@ -67,10 +67,10 @@ export function Team({ rounds, onPlayerClick }) {
                 <h2 style={{ margin: 12 }}>{teamName}</h2>
                 <div className="stat-badges">
                     {[
-                        { label: 'Round Points',  value: roundPoints },
-                        { label: 'Total Points',  value: totalPoints },
-                        { label: 'Round Rank',    value: `#${roundRank.toLocaleString()}` },
-                        { label: 'Overall Rank',  value: `#${overallRank.toLocaleString()}` },
+                        { label: 'Round Points',  value: localeFormat(roundPoints) },
+                        { label: 'Total Points',  value: localeFormat(totalPoints) },
+                        { label: 'Round Rank',    value: localeFormat(roundRank) },
+                        { label: 'Overall Rank',  value: localeFormat(overallRank) },
                     ].map(({ label, value }) => (
                         <div key={label} className="stat-badge-bg-team">
                             <div className="stat-badge-title">{label}</div>

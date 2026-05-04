@@ -1,6 +1,6 @@
 import { PosBadge, scoreColour } from "../helpers/colourCoding"
 
-export function PlayerCard({ id, playerMap, playerDataMap, captainId, viceCaptainId, onPlayerClick }) {
+export function PlayerCard({ id, playerMap, playerDataMap, captainId, viceCaptainId, bye, onPlayerClick }) {
     const player = playerDataMap[id]
     const name = player ? `${player.firstName} ${player.lastName}` : playerMap[id] || `ID ${id}`
     const isCap  = id === captainId
@@ -12,7 +12,7 @@ export function PlayerCard({ id, playerMap, playerDataMap, captainId, viceCaptai
 
     return (
         
-        <div className='player-card'>
+        <div className='player-card' style={{ opacity: bye ? 0.3 : 1}}>
             {/* Captain / VC badge */}
             {(isCap || isVice) && (
                 <div style={{

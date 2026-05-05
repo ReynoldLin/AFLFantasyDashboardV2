@@ -77,7 +77,7 @@ export default function App() {
             className={`header-tab ${appTab === 'withWithout' ? 'active' : ''}`}
             onClick={() => setAppTab('withWithout')}
           >
-            With/Without
+            With / Without
           </button>
         </nav>
       </header>

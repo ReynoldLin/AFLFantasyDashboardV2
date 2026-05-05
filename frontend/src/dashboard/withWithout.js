@@ -12,7 +12,7 @@ const STAT_ROWS = [
   { key: 'handballs',    label: 'Handballs',      format: v => v.toFixed(1) },
   { key: 'marks',        label: 'Marks',          format: v => v.toFixed(1) },
   { key: 'tackles',      label: 'Tackles',        format: v => v.toFixed(1) },
-  { key: 'hitouts',      label: 'Hitouts',       format: v => v.toFixed(1) },
+  { key: 'hitouts',      label: 'Hitouts',        format: v => v.toFixed(1) },
   { key: 'goals',        label: 'Goals',          format: v => v.toFixed(1) },
   { key: 'behinds',      label: 'Behinds',        format: v => v.toFixed(1) },
 ]
@@ -160,7 +160,7 @@ function StatsTable({ playerWith, playerWithout, statsWith, statsWithout, loadin
   // Diff column: with - without, shown when both loaded
   function renderDiff(key, format) {
     if (!statsWith || !statsWithout) return <td style={{ ...col, color: 'var(--muted)' }}>—</td>
-    const diff = statsWith[key] - statsWithout[key]
+    const diff = statsWithout[key] - statsWith[key]
     if (key === 'games') return <td style={{ ...col, color: 'var(--muted)' }}>—</td>
     const color = diff > 0 ? '#007a52' : diff < 0 ? '#d63050' : 'var(--muted)'
     const prefix = diff > 0 ? '+' : ''
@@ -279,11 +279,11 @@ export function WithWithout() {
           <div style={{ alignSelf: 'center', color: 'var(--muted)', fontSize: 18, fontWeight: 300, paddingTop: 22 }}>/</div>
 
           <PlayerSearchBox
-            label="Without player"
+            label="With / Without player"
             selectedPlayer={playerWithout}
             onSelect={setPlayerWithout}
             disabled={!playerWith}
-            disabledHint="Select 'with' player first..."
+            disabledHint="Select player first..."
             players={squadPlayers}
             loading={playersLoading}
           />

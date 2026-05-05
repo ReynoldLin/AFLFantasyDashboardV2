@@ -4,6 +4,7 @@ import './App.css'
 import { PlayerTable } from './dashboard/playerDashboard'
 import { Modal } from './modal/modal'
 import { Team } from './dashboard/teamViewer'
+import { WithWithout } from './dashboard/withWithout'
 
 export default function App() {
   const [appTab, setAppTab] = useState('players')
@@ -71,6 +72,12 @@ export default function App() {
             onClick={() => setAppTab('team')}
           >
             Team
+          </button>
+          <button
+            className={`header-tab ${appTab === 'withWithout' ? 'active' : ''}`}
+            onClick={() => setAppTab('withWithout')}
+          >
+            With/Without
           </button>
         </nav>
       </header>
@@ -140,6 +147,12 @@ export default function App() {
             dfsSummary={dfsSummary}
             rounds={rounds}
           />
+        </>
+      )}
+
+      {appTab === 'withWithout' && (
+        <>
+          <WithWithout/>
         </>
       )}
     </div>

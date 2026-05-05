@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { fetchPlayers, fetchPlayerGameStats } from '../api'
-import { PosBadge, scoreColour } from '../helpers/colourCoding'
+import { fetchPlayers, fetchPlayerGameStats, fetchDFSSummary } from '../api'
+import { PosBadge, scoreColour, togColour, cbaColour } from '../helpers/colourCoding'
 import { calcFantasyScore } from '../modal/tab-content/gameHistory'
 
 // ─── stat rows config ────────────────────────────────────────────────────────
@@ -15,6 +15,10 @@ const STAT_ROWS = [
   { key: 'hitouts',      label: 'Hitouts',        format: v => v.toFixed(1) },
   { key: 'goals',        label: 'Goals',          format: v => v.toFixed(1) },
   { key: 'behinds',      label: 'Behinds',        format: v => v.toFixed(1) },
+  { key: 'timeOnGroundPercentage',           label: 'Time on Ground %', format: v => v.toFixed(0) + '%', colourFn: togColour },
+  { key: 'centreBounceAttendancePercentage', label: 'CBA %',            format: v => v.toFixed(0) + '%', colourFn: cbaColour },
+  { key: 'ruckContestPercentage',            label: 'Ruck Contest %',   format: v => v.toFixed(0) + '%' },
+  { key: 'kickins',                          label: 'Kick Ins',         format: v => v.toFixed(1) },
 ]
 
 function calcStats(games) {
@@ -32,6 +36,10 @@ function calcStats(games) {
     hitouts:    avg('hitouts'),
     goals:      avg('goals'),
     behinds:    avg('behinds'),
+    timeOnGroundPercentage:           avg('timeOnGroundPercentage'),
+    centreBounceAttendancePercentage: avg('centreBounceAttendancePercentage'),
+    ruckContestPercentage:            avg('ruckContestPercentage'),
+    kickins:                          avg('kickins'),
   }
 }
 
@@ -141,7 +149,7 @@ function StatsTable({ playerWith, playerWithout, statsWith, statsWithout, loadin
   const col = { padding: '11px 24px', textAlign: 'center', fontSize: 13 }
   const labelCol = { padding: '11px 16px', fontSize: 13, color: 'var(--muted)', fontWeight: 500, whiteSpace: 'nowrap' }
 
-  function renderCell(stats, loading, key, format, highlight) {
+  function renderCell(stats, loading, key, format, highlight, colourFn) {
     if (loading) return <td style={col}><div className="skeleton" style={{ width: 40, margin: '0 auto' }} /></td>
     if (!stats) return <td style={{ ...col, color: 'var(--muted)' }}>—</td>
     const val = stats[key]
@@ -149,6 +157,15 @@ function StatsTable({ playerWith, playerWithout, statsWith, statsWithout, loadin
       return (
         <td style={col}>
           <span style={{ ...scoreColour(val), borderRadius: 6, padding: '2px 10px', fontWeight: 700, display: 'inline-block', minWidth: 50 }}>
+            {format(val)}
+          </span>
+        </td>
+      )
+    }
+    if (colourFn) {
+      return (
+        <td style={col}>
+          <span style={{ ...colourFn(val), borderRadius: 6, padding: '2px 10px', fontWeight: 700, display: 'inline-block', minWidth: 50 }}>
             {format(val)}
           </span>
         </td>
@@ -193,11 +210,11 @@ function StatsTable({ playerWith, playerWithout, statsWith, statsWithout, loadin
           </tr>
         </thead>
         <tbody>
-          {STAT_ROWS.map(({ key, label, format, highlight, isCount }) => (
+          {STAT_ROWS.map(({ key, label, format, highlight, isCount, colourFn }) => (
             <tr key={key} style={{ borderBottom: '1px solid var(--border)' }}>
               <td style={labelCol}>{label}</td>
-              {renderCell(statsWith,    loadingWith,    key, format, highlight)}
-              {renderCell(statsWithout, loadingWithout, key, format, highlight)}
+              {renderCell(statsWith,    loadingWith,    key, format, highlight, colourFn)}
+              {renderCell(statsWithout, loadingWithout, key, format, highlight, colourFn)}
               {renderDiff(key, format)}
             </tr>
           ))}
@@ -215,14 +232,32 @@ export function WithWithout() {
   const [playerWith, setPlayerWith]       = useState(null)
   const [playerWithout, setPlayerWithout] = useState(null)
 
-  const [gamesWithPlayer, setGamesWithPlayer]     = useState(null)
+  const [gamesWithPlayer, setGamesWithPlayer]       = useState(null)
   const [gamesWithoutPlayer, setGamesWithoutPlayer] = useState(null)
-  const [loadingWith, setLoadingWith]             = useState(false)
-  const [loadingWithout, setLoadingWithout]       = useState(false)
+  const [combinedGames, setCombinedGames]           = useState(null)
+  const [loadingWith, setLoadingWith]               = useState(false)
+  const [loadingWithout, setLoadingWithout]         = useState(false)
+
+  const combinedMap = new Map(
+    (combinedGames || [])
+      .filter(g => g.heatmapUrl)
+      .map(g => {
+        const match = g.heatmapUrl.match(/match-(\d+)-/)
+        return match ? [match[1], g] : null
+      })
+      .filter(Boolean)
+  )
+  const enriched = (gamesWithPlayer || []).map(g => ({
+    ...g,
+    timeOnGroundPercentage:           parseFloat(combinedMap.get(String(g.gameId))?.timeOnGroundPercentage ?? 0),
+    centreBounceAttendancePercentage: parseFloat(combinedMap.get(String(g.gameId))?.centreBounceAttendancePercentage ?? 0),
+    ruckContestPercentage:            parseFloat(combinedMap.get(String(g.gameId))?.ruckContestPercentage ?? 0),
+    kickins:                          parseInt(combinedMap.get(String(g.gameId))?.kickins ?? 0),
+  }))
 
   const withoutPlayerGameIds = new Set((gamesWithoutPlayer || []).map(g => g.gameId))
-  const statsWith    = gamesWithPlayer ? calcStats(gamesWithPlayer.filter(g => withoutPlayerGameIds.has(g.gameId))) : null
-  const statsWithout = gamesWithPlayer ? calcStats(gamesWithPlayer.filter(g => !withoutPlayerGameIds.has(g.gameId))) : null
+  const statsWith    = enriched.length ? calcStats(enriched.filter(g => withoutPlayerGameIds.has(g.gameId))) : null
+  const statsWithout = enriched.length ? calcStats(enriched.filter(g => !withoutPlayerGameIds.has(g.gameId))) : null
 
   // Load all players once for search
   useEffect(() => {
@@ -235,11 +270,21 @@ export function WithWithout() {
 
   useEffect(() => {
     setGamesWithPlayer(null)
+    setCombinedGames(null)
     if (!playerWith) return
     setLoadingWith(true)
-    fetchPlayerGameStats(playerWith.id)
-      .then(data => setGamesWithPlayer(data))
-      .catch(() => setGamesWithPlayer(null))
+    Promise.all([
+      fetchPlayerGameStats(playerWith.id),
+      fetchDFSSummary(playerWith.id),
+    ])
+      .then(([gameStats, dfsSummary]) => {
+        setGamesWithPlayer(gameStats)
+        setCombinedGames(dfsSummary.combinedGames || [])
+      })
+      .catch(() => {
+        setGamesWithPlayer(null)
+        setCombinedGames(null)
+      })
       .finally(() => setLoadingWith(false))
   }, [playerWith])
 
@@ -261,6 +306,7 @@ export function WithWithout() {
     setPlayerWith(player)
     setPlayerWithout(null)
     setGamesWithoutPlayer(null)
+    setCombinedGames(null)
   }
 
   return (

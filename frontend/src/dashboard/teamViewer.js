@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { fetchTeam, fetchPlayers } from '../api'
 import { PlayerCard } from './playerCard'
 import { POS_COLOURS } from '../helpers/colourCoding'
-import { isOnBye } from './byeDetector'
+import { isOnBye } from './dashboard-helpers/byeDetector'
 
 const POSITION_ORDER = ['DEF', 'MID', 'RUC', 'FWD']
 

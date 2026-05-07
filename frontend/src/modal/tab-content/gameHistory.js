@@ -251,7 +251,7 @@ export function GameHistory({
     const historicalYears = playerHistory ? [...playerHistory].reverse() : []
 
     function getDfsGame(roundNumber, yr) {
-        return dfsGames.find(g => parseInt(g.round) === roundNumber && g.year === String(yr))
+        return dfsGames.find(g => parseInt(g.round) === roundNumber && g.year === String(yr) && g.league === 'AFL')
     }
 
     return (

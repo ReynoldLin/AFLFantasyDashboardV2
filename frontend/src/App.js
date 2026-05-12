@@ -5,6 +5,7 @@ import { PlayerTable } from './dashboard/playerDashboard'
 import { Modal } from './modal/modal'
 import { Team } from './dashboard/teamViewer'
 import { WithWithout } from './dashboard/withWithout'
+import { TeamDashboard } from './dashboard/teamDashboard'
 
 export default function App() {
   const [appTab, setAppTab] = useState('players')
@@ -62,16 +63,22 @@ export default function App() {
         <h1>AFL FANTASY</h1>
         <nav className="header-tabs">
           <button
+            className={`header-tab ${appTab === 'team' ? 'active' : ''}`}
+            onClick={() => setAppTab('team')}
+          >
+            My Team
+          </button>
+          <button
             className={`header-tab ${appTab === 'players' ? 'active' : ''}`}
             onClick={() => setAppTab('players')}
           >
             Players
           </button>
           <button
-            className={`header-tab ${appTab === 'team' ? 'active' : ''}`}
-            onClick={() => setAppTab('team')}
+            className={`header-tab ${appTab === 'teams' ? 'active' : ''}`}
+            onClick={() => setAppTab('teams')}
           >
-            Team
+            Teams
           </button>
           <button
             className={`header-tab ${appTab === 'withWithout' ? 'active' : ''}`}
@@ -153,6 +160,12 @@ export default function App() {
       {appTab === 'withWithout' && (
         <>
           <WithWithout/>
+        </>
+      )}
+
+      {appTab === 'teams' && (
+        <>
+          <TeamDashboard/>
         </>
       )}
     </div>

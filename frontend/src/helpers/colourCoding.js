@@ -41,8 +41,8 @@ export function scoreColour(score) {
 }
 
 export function qtrScoreColour(score) {
-  if (score >= 50) return { background: '#E8D5FF', color: 'var(--text)' }
-  if (score >= 30) return { background: '#8DDEFE', color: 'var(--text)' }
+  if (score >= 50) return { background: '#8DDEFE', color: 'var(--text)' }
+  if (score >= 30) return { background: '#E8D5FF', color: 'var(--text)' }
   if (score >= 20) return { background: '#C8E0A9', color: 'var(--text)' }
   if (score >= 15)  return { background: '#FEE08D', color: 'var(--text)' }
   return { background: '#ED999B', color: 'var(--text)' }
